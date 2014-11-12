@@ -3,3 +3,6 @@
 /ggp-base.jar
 /.gradle/
 /build/
+
+# Ignoring testing/: the folder with scores from testing games. 
+testing/

@@ -6,3 +6,8 @@
 
 # Ignoring testing/: the folder with scores from testing games. 
 testing/
+
+# Ignoring arbitrary other .class and .pyc files that might wind up elsewhere.
+*.class
+*.pyc
+

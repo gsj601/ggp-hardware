@@ -3,39 +3,45 @@ A module for helping you run java as an external process.
 """
 
 
-# This list should be externalized with a config file later.
-java_libs = [
-		"Batik",
-		"Clojure",
-		"FlyingSaucer",
-		"Guava",
-		"Htmlparser",
-		"JFreeChart",
-		"JGoodiesForms",
-		"JUnit",
-		"Jython",
-		"javassist",
-		"reflection"
-		]
-
-
 
 """JavaProcess:
 	Represents an external process that happens to be a java program.
 	Has built-in tools for building the appropriate classpath, etc.
 """
 class JavaProcess:
-
+	
+	# This list should be externalized with a config file later.
+	default_java_libs = [
+			"Batik",
+			"Clojure",
+			"FlyingSaucer",
+			"Guava",
+			"Htmlparser",
+			"JFreeChart",
+			"JGoodiesForms",
+			"JUnit",
+			"Jython",
+			"javassist",
+			"reflection"
+			]
+	
 	def __init__(self):
+		self.java_libs = self._construct_libs()
 		self.cp = self._construct_classpath_str()
 	
+	"""_construct_libs:
+		 --> [string]
+		Each string returned is the name of a folder in lib/ to use.
+	"""
+	def _construct_libs(self):
+		# For now, just return the default one! 
+		return JavaProcess.default_java_libs
+
 	"""_construct_classpath_str:
 		 --> string
 		The string returned contains a Java classpath.
 	"""
 	def _construct_classpath_str(self):
-		global java_libs
-	
 		cp = ".:bin/"
 	
 		lib_str = "lib/"

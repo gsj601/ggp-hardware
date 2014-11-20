@@ -3,6 +3,10 @@ A module for helping you run java as an external process.
 """
 
 
+# Standard Imports
+import subprocess
+
+
 
 """JavaProcess:
 	Represents an external process that happens to be a java program.
@@ -25,9 +29,27 @@ class JavaProcess:
 			"reflection"
 			]
 	
-	def __init__(self):
+	def __init__(self, class_loc, args=[]):
 		self._java_libs = self._construct_libs()
 		self._cp = self._construct_classpath_str()
+		self.class_loc = class_loc
+		self.args = args
+		
+		self._process = None
+		self._stdout = None
+		self._stderr = None
+		return
+	
+	def run(self):
+		command_list = ["java"]
+		command_list.append(self.class_loc)
+		command_list.extend(["-cp", self._cp])
+		command_list.extend(self.args)
+		
+		self._process = subprocess.Popen(command_list, stdout=PIPE, stdin=PIPE)
+		(self._stdout, self._stderr) = self._process.communicate()
+		return
+	
 	
 	"""_construct_libs:
 		 --> [string]

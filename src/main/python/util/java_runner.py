@@ -46,8 +46,8 @@ class JavaProcess:
 		command_list.extend(["-cp", self._cp])
 		command_list.extend(self.args)
 		
-		self._process = subprocess.Popen(command_list, stdout=PIPE, stdin=PIPE)
-		(self._stdout, self._stderr) = self._process.communicate()
+		self._process = subprocess.Popen(command_list)
+		self._process.communicate()
 		return
 	
 	

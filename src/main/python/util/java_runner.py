@@ -26,8 +26,8 @@ class JavaProcess:
 			]
 	
 	def __init__(self):
-		self.java_libs = self._construct_libs()
-		self.cp = self._construct_classpath_str()
+		self._java_libs = self._construct_libs()
+		self._cp = self._construct_classpath_str()
 	
 	"""_construct_libs:
 		 --> [string]

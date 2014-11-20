@@ -46,10 +46,10 @@ class JavaProcess:
 	
 		lib_str = "lib/"
 	
-		for lib in java_libs:
+		for lib in self._java_libs:
 			cp = cp + ":" + lib_str + lib + "/*"
 	
-		self.cp = cp
+		return cp
 	
 
 

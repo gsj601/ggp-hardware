@@ -20,24 +20,31 @@ java_libs = [
 
 
 
-
-
-"""construct_classpath_str:
-	 --> string
-	The string returned contains a Java classpath.
+"""JavaProcess:
+	Represents an external process that happens to be a java program.
+	Has built-in tools for building the appropriate classpath, etc.
 """
-def construct_classpath_str():
-	global java_libs
-	
-	cp = ".:bin/"
-	
-	lib_str = "lib/"
-	
-	for lib in java_libs:
-		cp = cp + ":" + lib_str + lib + "/*"
-	
-	return cp
+class JavaProcess:
 
+	def __init__(self):
+		self.cp = self._construct_classpath_str()
+	
+	"""_construct_classpath_str:
+		 --> string
+		The string returned contains a Java classpath.
+	"""
+	def _construct_classpath_str(self):
+		global java_libs
+	
+		cp = ".:bin/"
+	
+		lib_str = "lib/"
+	
+		for lib in java_libs:
+			cp = cp + ":" + lib_str + lib + "/*"
+	
+		self.cp = cp
+	
 
 
 

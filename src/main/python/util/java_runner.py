@@ -12,7 +12,7 @@ import subprocess
 	Represents an external process that happens to be a java program.
 	Has built-in tools for building the appropriate classpath, etc.
 """
-class JavaProcess:
+class JavaProcess(object):
 	
 	# This list should be externalized with a config file later.
 	default_java_libs = [

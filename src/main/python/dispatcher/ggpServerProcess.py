@@ -25,7 +25,7 @@ class GGPServerProcess(util.java_runner.JavaProcess):
 	"""
 	def __init__(self, args=[]):
 		self._ggpServerClass_loc = self._construct_ggpServerClass_loc()
-		util.java_runner.JavaProcess.__init__(self, self._ggpServerClass_loc, args)
+		super(GGPServerProcess, self).__init__(self._ggpServerClass_loc, args)
 	
 	"""_construct_ggpServerClass_loc():
 		 --> string

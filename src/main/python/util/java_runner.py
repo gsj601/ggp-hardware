@@ -28,6 +28,9 @@ class JavaProcess:
 			"javassist",
 			"reflection"
 			]
+
+	# This string should be externalized with a config file later. 
+	default_ggpBaseInstall_loc = "/Users/gsj601/git/ggp-hardware.git/"
 	
 	def __init__(self, class_loc, args=[]):
 		self._java_libs = self._construct_libs()
@@ -42,8 +45,8 @@ class JavaProcess:
 	
 	def run(self):
 		command_list = ["java"]
-		command_list.append(self.class_loc)
 		command_list.extend(["-cp", self._cp])
+		command_list.append(self.class_loc)
 		command_list.extend(self.args)
 		
 		self._process = subprocess.Popen(command_list)
@@ -58,15 +61,16 @@ class JavaProcess:
 	def _construct_libs(self):
 		# For now, just return the default one! 
 		return JavaProcess.default_java_libs
-
+	
 	"""_construct_classpath_str:
 		 --> string
 		The string returned contains a Java classpath.
 	"""
 	def _construct_classpath_str(self):
-		cp = ".:bin/"
+		absolute_prepend = JavaProcess.default_ggpBaseInstall_loc
+		cp = absolute_prepend + "bin/"
 	
-		lib_str = "lib/"
+		lib_str = absolute_prepend + "lib/"
 	
 		for lib in self._java_libs:
 			cp = cp + ":" + lib_str + lib + "/*"

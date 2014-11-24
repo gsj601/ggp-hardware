@@ -61,8 +61,6 @@ class JavaProcess(object):
 		command_list.append(self.class_loc)
 		command_list.extend(self.args)
 		
-		print command_list
-		
 		self._process = subprocess.Popen(command_list)
 		self._process.communicate()
 		return

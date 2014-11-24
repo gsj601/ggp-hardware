@@ -32,6 +32,13 @@ class JavaProcess:
 	# This string should be externalized with a config file later. 
 	default_ggpBaseInstall_loc = "/Users/gsj601/git/ggp-hardware.git/"
 	
+	"""JavaProcess.__init__(self, class_loc, args=[])
+		Initializes an external Java process. 
+		class_loc: the location, relative to classpath, where the 
+			compiled Java class file lives. 
+		args: a list of strings, where each is a command-line argument
+			to the external Java process. (Default: no args; empty list.) 
+	"""
 	def __init__(self, class_loc, args=[]):
 		self._java_libs = self._construct_libs()
 		self._cp = self._construct_classpath_str()
@@ -43,11 +50,18 @@ class JavaProcess:
 		self._stderr = None
 		return
 	
+	"""JavaProcess.run(self):
+		Runs the external Java process.  
+		Takes no parameters; the object should have its fields set 
+		as intended before calling run().
+	"""
 	def run(self):
 		command_list = ["java"]
 		command_list.extend(["-cp", self._cp])
 		command_list.append(self.class_loc)
 		command_list.extend(self.args)
+		
+		print command_list
 		
 		self._process = subprocess.Popen(command_list)
 		self._process.communicate()
@@ -65,6 +79,7 @@ class JavaProcess:
 	"""_construct_classpath_str:
 		 --> string
 		The string returned contains a Java classpath.
+		Requires the absolute path of the installation of ggp-base. 
 	"""
 	def _construct_classpath_str(self):
 		absolute_prepend = JavaProcess.default_ggpBaseInstall_loc

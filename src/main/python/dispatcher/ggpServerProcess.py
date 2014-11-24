@@ -17,16 +17,59 @@ class GGPServerProcess(util.java_runner.JavaProcess):
 	# This should be externalized with a config file
 	default_ggpServerClass_loc = "org/ggp/base/apps/utilities/GameServerRunner"
 
-	"""GGPServerProcess.__init__(self, args)
+	"""GGPServerProcess.__init__(self, 
+			tourneyName, gameKey, startClock, playClock)
+		self, str, str, int, int -> new GGPServerProcess
 		Initialize the GGPServerProcess.  
 		The class to run is not a parameter, but instead is externalized. 
-		The arguments are currently temporary; should be constructed based on 
-		fields, such as player hosts/ports.  
+		- tourneyName identifies where to store data from gameplay
+		- gameKey identifies which game to paly
+		- startClock is the amount of time players have before turns start
+		- playClock is the amount of time players have to make a move. 
 	"""
-	def __init__(self, args=[]):
+	def __init__(self, tourneyName, gameKey, startClock, playClock):
+		# Call super constructor:
 		self._ggpServerClass_loc = self._construct_ggpServerClass_loc()
-		super(GGPServerProcess, self).__init__(self._ggpServerClass_loc, args)
+		super(GGPServerProcess, self).__init__(self._ggpServerClass_loc)
+		
+		# Set fields from arguments:
+		self._tourneyName = tourneyName
+		self._gameKey = gameKey
+		self._startClock = startClock
+		self._playClock = playClock
+		
+		# Initialize other fields:
+		self._hosts = []
+		
+		# Initialize the arguments list:
+		#DEPENDENCY: static processing of arguments in 
+		#	org/ggp/base/apps/utilities/GameServerRunner
+		self.args = []
+		# args[0]: tourneyName: where to save data?
+		self.args.append(self._tourneyName)
+		# args[1]: gameKey: what game are we playing?
+		self.args.append(self._gameKey)
+		# args[2]: startClock: how much time before turns?
+		self.args.append(str(self._startClock))
+		# args[3]: playClock: how much time per turn?
+		self.args.append(str(self._playClock))
+
+		# The remaining arguments should be constructed after adding hosts!
+		
 	
+	"""GGPServerProcess.add_host(self, hostName, playerName, portNumber)
+		self, str, str, int -> adds player-host to self._hosts
+	"""
+	def add_host(self, hostName, playerName, portNumber):
+		# Construct the new host
+		newHost = ConnectedHost(hostName, playerName, portNumber)
+		newArgs = newHost.to_args()
+		
+		# Add the host to our fields
+		self._hosts.append(newHost)
+		self.args.extend(newArgs)
+
+
 	"""_construct_ggpServerClass_loc():
 		 --> string
 		The string returned contains the file location of the class to run--
@@ -36,5 +79,33 @@ class GGPServerProcess(util.java_runner.JavaProcess):
 		return GGPServerProcess.default_ggpServerClass_loc
 
 
+
+
+"""ConnectedHost
+	A class to join together 
+		- the host address
+		- player name
+		- and port number
+	of a player that is connecting to the ggp-base server. 
+"""
+class ConnectedHost(object):
+
+	"""ConnectedHost.__init__(self, hostName, playerName, portNumber)
+		Initializes a ConnectedHost. 
+		hostName: string; IP address or DNS name
+		playerName: string; an arbitrary, unique identifier
+		portNumber: int; the port that hostName is talking on
+	"""
+	def __init__(self, hostName, playerName, portNumber):
+		self._hostName = hostName
+		self._playerName = playerName
+		self._portNumber = portNumber
+	
+	"""ConnectedHost.to_args(self):
+		Given the fields of this object, construct a list of args for 
+		Java command-line. 
+	"""
+	def to_args(self):
+		args = [self._hostName, self.playerName, str(self._portNumber)]
 
 

@@ -6,6 +6,8 @@ import SocketServer
 import json
 import random
 import socket
+import time
+import threading
 
 random.seed()
 
@@ -41,8 +43,14 @@ class PlayerHostQueue(object):
 	
 	@classmethod
 	def get_host(PlayerHostQueue):
-		return _queue.get(True)
-	
+		p = None
+		while p == None:
+			if PlayerHostQueue._queue.empty():
+				time.sleep(1)
+			else:
+				p = PlayerHostQueue._queue.get(False)
+		return p
+		
 	
 
 

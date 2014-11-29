@@ -23,11 +23,11 @@ import ggpServerProcess
 class PlayerHost(object):
 	
 	def __init__(self, hostname, port):
-		self._hostname = hostname
-		self._port = port
+		self.hostname = hostname
+		self.port = port
 	
 	def get_address_tuple(self):
-		return (self._hostname, self._port)
+		return (self.hostname, self.port)
 	
 
 

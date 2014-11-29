@@ -35,12 +35,12 @@ class PlayerHostQueue(object):
 	
 	
 	@classmethod
-	def put_host(hostname, port):
+	def put_host(PlayerHostQueue, hostname, port):
 		pHost = PlayerHost(hostname, port)
-		_queue.put(pHost)
+		PlayerHostQueue._queue.put(pHost)
 	
 	@classmethod
-	def get_host(self):
+	def get_host(PlayerHostQueue):
 		return _queue.get(True)
 	
 	

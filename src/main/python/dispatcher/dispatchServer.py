@@ -213,6 +213,11 @@ class DispatchServer(object):
 	
 	
 	def run(self):
+		# Start listening for ready workers. 
+		t = threading.Thread(
+			target=self._readyWorkerServer.serve_forever)
+		t.start()
+		
 		# Read in an experiment config file if there is one.
 		
 		# If there isn't (or if reading from config file isn't working yet...)

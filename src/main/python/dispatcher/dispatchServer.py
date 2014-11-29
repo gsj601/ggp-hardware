@@ -109,8 +109,6 @@ class Match(object):
 		"SamplePythonGamerStub", 
 		"SampleLegalGamer", 
 		"SampleMonteCarloGamer", 
-		"KioskGamer", 
-		"HumanGamer"
 		]
 	
 	default_games = [

@@ -106,6 +106,7 @@ class ConnectedHost(object):
 		Java command-line. 
 	"""
 	def to_args(self):
-		args = [self._hostName, self.playerName, str(self._portNumber)]
+		args = [self._hostName, str(self._portNumber), self._playerName]
+		return args
 
 

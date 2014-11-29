@@ -2,6 +2,7 @@
 
 
 import socket
+import json
 
 
 
@@ -26,8 +27,12 @@ class WorkerServer(object):
 	
 	default_ourPlayerPort = 9147
 	
-	def __init__(self):
-		self._ourPlayerPort = WorkerServer.default_ourPlayerPort
+	def __init__(self, port=None):
+		if not port == None:
+			self._ourPlayerPort = port
+		else:
+			self._ourPlayerPort = WorkerServer.default_ourPlayerPort
+		
 		self._ourHostname = WorkerServer.default_ourHostname
 				
 		self._dispatcher_hp = (
@@ -58,11 +63,11 @@ class WorkerServer(object):
 		s.bind(our_hp)
 		s.listen(1)
 		conn, addr = s.accept()
-		data = json.load(conn.read())
+		data = json.loads(conn.recv(100000).strip())
 		conn.close()
 		
 		# The play half:
-		port, playerType = (data.port, data.playerType)
+		port, playerType = (data["port"], data["playerType"])
 		player = ggpPlayerProcess.GGPPlayerProcess(port, playerType)
 		player.run()
 		

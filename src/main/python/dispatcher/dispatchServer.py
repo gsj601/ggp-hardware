@@ -6,6 +6,8 @@ import SocketServer
 import json
 import random
 import socket
+import time
+import threading
 
 random.seed()
 
@@ -21,11 +23,11 @@ import ggpServerProcess
 class PlayerHost(object):
 	
 	def __init__(self, hostname, port):
-		self._hostname = hostname
-		self._port = port
+		self.hostname = hostname
+		self.port = port
 	
 	def get_address_tuple(self):
-		return (self._hostname, self._port)
+		return (self.hostname, self.port)
 	
 
 
@@ -35,14 +37,20 @@ class PlayerHostQueue(object):
 	
 	
 	@classmethod
-	def put_host(hostname, port):
+	def put_host(PlayerHostQueue, hostname, port):
 		pHost = PlayerHost(hostname, port)
-		_queue.put(pHost)
+		PlayerHostQueue._queue.put(pHost)
 	
 	@classmethod
-	def get_host(self):
-		return _queue.get(True)
-	
+	def get_host(PlayerHostQueue):
+		p = None
+		while p == None:
+			if PlayerHostQueue._queue.empty():
+				time.sleep(1)
+			else:
+				p = PlayerHostQueue._queue.get(False)
+		return p
+		
 	
 
 
@@ -62,14 +70,13 @@ class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
 	
 	def handle(self):
 		# Read in from the stream:
-		read_data = self.rfile.readline().strip()
+		# Parse the data as json:
+		data = json.load(self.rfile)
 		# Return an okay on the socket.  
 		self.request.sendall(json.dumps({'return':'ok'}))
 		
-		# Parse the data as json:
-		data = json.load(read_data)
 		# Get out the fields we want:
-		hostname, port = (data.hostname, data.port)
+		hostname, port = (data["hostname"], data["port"])
 		# Add the ready worker to the queue.  
 		PlayerHostQueue.put_host(hostname, port)
 		
@@ -102,8 +109,6 @@ class Match(object):
 		"SamplePythonGamerStub", 
 		"SampleLegalGamer", 
 		"SampleMonteCarloGamer", 
-		"KioskGamer", 
-		"HumanGamer"
 		]
 	
 	default_games = [
@@ -135,7 +140,7 @@ class Match(object):
 		
 		# Given a number of players by knowing what game we're playing, 
 		# pick player types for the players.  
-		for player in self.numPlayers:
+		for player in range(0,self.numPlayers):
 			self._playerTypes.append(
 				random.choice(self._availablePlayerTypes))
 		
@@ -206,12 +211,17 @@ class DispatchServer(object):
 	
 	
 	def run(self):
+		# Start listening for ready workers. 
+		t = threading.Thread(
+			target=self._readyWorkerServer.serve_forever)
+		t.start()
+		
 		# Read in an experiment config file if there is one.
 		
 		# If there isn't (or if reading from config file isn't working yet...)
 		if self._run_random:
 			while True: 
-				self._currentMatch = Match()
+				self._currentMatch = Match(self._tourneyName)
 				self._currentMatch.generate_random_match()
 				for i in range(self._currentMatch.numPlayers):
 					playerHost = PlayerHostQueue.get_host()

@@ -2,6 +2,7 @@
 
 
 import socket
+import json
 
 
 
@@ -58,11 +59,11 @@ class WorkerServer(object):
 		s.bind(our_hp)
 		s.listen(1)
 		conn, addr = s.accept()
-		data = json.load(conn.read())
+		data = json.loads(conn.recv(100000).strip())
 		conn.close()
 		
 		# The play half:
-		port, playerType = (data.port, data.playerType)
+		port, playerType = (data["port"], data["playerType"])
 		player = ggpPlayerProcess.GGPPlayerProcess(port, playerType)
 		player.run()
 		

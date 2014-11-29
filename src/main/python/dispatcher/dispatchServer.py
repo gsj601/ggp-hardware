@@ -62,14 +62,13 @@ class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
 	
 	def handle(self):
 		# Read in from the stream:
-		read_data = self.rfile.readline().strip()
+		# Parse the data as json:
+		data = json.load(self.rfile)
 		# Return an okay on the socket.  
 		self.request.sendall(json.dumps({'return':'ok'}))
 		
-		# Parse the data as json:
-		data = json.load(read_data)
 		# Get out the fields we want:
-		hostname, port = (data.hostname, data.port)
+		hostname, port = (data["hostname"], data["port"])
 		# Add the ready worker to the queue.  
 		PlayerHostQueue.put_host(hostname, port)
 		

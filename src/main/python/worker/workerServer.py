@@ -27,8 +27,12 @@ class WorkerServer(object):
 	
 	default_ourPlayerPort = 9147
 	
-	def __init__(self):
-		self._ourPlayerPort = WorkerServer.default_ourPlayerPort
+	def __init__(self, port=None):
+		if not port == None:
+			self._ourPlayerPort = port
+		else:
+			self._ourPlayerPort = WorkerServer.default_ourPlayerPort
+		
 		self._ourHostname = WorkerServer.default_ourHostname
 				
 		self._dispatcher_hp = (

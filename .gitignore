@@ -11,3 +11,8 @@ testing/
 *.class
 *.pyc
 
+# Ignoring a pyDev project file
+# It's for editing Python in Eclipse with some dot completion, etc. 
+# Unliked eclipse project files that gradle uses, no sense saving it. 
+.pydevproject
+

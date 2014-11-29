@@ -142,7 +142,7 @@ class Match(object):
 		
 		# Given a number of players by knowing what game we're playing, 
 		# pick player types for the players.  
-		for player in self.numPlayers:
+		for player in range(0,self.numPlayers):
 			self._playerTypes.append(
 				random.choice(self._availablePlayerTypes))
 		

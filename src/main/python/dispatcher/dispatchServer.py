@@ -218,7 +218,7 @@ class DispatchServer(object):
 		# If there isn't (or if reading from config file isn't working yet...)
 		if self._run_random:
 			while True: 
-				self._currentMatch = Match()
+				self._currentMatch = Match(self._tourneyName)
 				self._currentMatch.generate_random_match()
 				for i in range(self._currentMatch.numPlayers):
 					playerHost = PlayerHostQueue.get_host()

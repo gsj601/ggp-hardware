@@ -19,6 +19,9 @@ import ggpPlayerProcess
 
 
 class WorkerServer(object):
+	"""WorkerServer: handles telling dispatch we're ready; listening for match
+		information; running a ggp-base player. 
+	"""
 	
 	default_dispatchServerAddress = "localhost"
 	default_dispatchServerPort = 20000
@@ -28,6 +31,7 @@ class WorkerServer(object):
 	default_ourPlayerPort = 9147
 	
 	def __init__(self, port=None):
+		"""WorkerServer.__init__: sets address of us and of dispatcher."""
 		if not port == None:
 			self._ourPlayerPort = port
 		else:
@@ -41,6 +45,9 @@ class WorkerServer(object):
 			)
 	
 	def announce_ready(self):
+		"""WorkerServer.announce_ready(): tell dispatcher we're ready to play, 
+			by sending them a json object of our hostname and port.
+		"""
 		configuration = {
 			"hostname": self._ourHostname,
 			"port": self._ourPlayerPort
@@ -53,7 +60,10 @@ class WorkerServer(object):
 		s.close()
 	
 	def wait_and_play(self):
-		""" 
+		"""WorkerServer.wait_and_play: wait for notification of match 
+			We want the information needed to start up a GGPPlayerProcess:
+				- what player type to play as
+				- what port to run on, that game will run on.
 		This non-server listening code taken from:
 			https://wiki.python.org/moin/TcpCommunication
 		"""
@@ -71,30 +81,14 @@ class WorkerServer(object):
 		player = ggpPlayerProcess.GGPPlayerProcess(port, playerType)
 		player.run()
 		
-		
-		
-		
 	
 	def run(self):
-		
+		"""WorkerServer.run(): just loops: announcing ready, wait to play."""
 		while True:
 			# Tell the dispatcher we're ready to play a game.  
 			self.announce_ready()
 			# Then wait to hear about what playerType to play as, and 
 			# play that game. 
 			self.wait_and_play()
-			
-			
+		
 	
-	
-	
-
-
-
-
-
-
-
-
-
-

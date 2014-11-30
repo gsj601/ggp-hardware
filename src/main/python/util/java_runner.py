@@ -26,7 +26,7 @@ class JavaProcess(object):
 			"JUnit",
 			"Jython",
 			"javassist",
-			"reflection"
+			"reflections"
 			]
 
 	# This string should be externalized with a config file later. 

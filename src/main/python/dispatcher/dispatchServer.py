@@ -21,28 +21,66 @@ import ggpServerProcess
 
 
 class PlayerHost(object):
+	"""PlayerHost:
+		A (hostname, port) that has contacted the server to say that it's 
+		ready to play a match.
+	"""
 	
 	def __init__(self, hostname, port):
+		"""PlayerHost.__init__(self, hostname, port):
+			str, int --> new PlayerHost with fields set
+		"""
 		self.hostname = hostname
 		self.port = port
 	
 	def get_address_tuple(self):
+		"""PlayerHost.get_address_tuple: PlayerHost -> (str, int)
+			Returns a tuple of the PlayerHost. 
+			Fields are public; so this is a convenience method for some socket 
+			functions that take an address as (address, port)
+		"""
 		return (self.hostname, self.port)
 	
 
 
 class PlayerHostQueue(object):
+	"""PlayerHostQueue:
+		A Queue.Queue of PlayerHosts.  
+		Maintains a single static queue, with static class methods, so that it 
+		can be statically accessed.  The queue is added to by a TCPServer using
+		the ReadyWorkerHandler, which can only be overriden so much, in Python.
+		The TCPServer takes a class reference, not an object, so we have no 
+		control of the fields of the ReadyWorkerHandler being used. Therefore, 
+		any accesses the handler makes outside of its handle() function, have 
+		to be static ones. 
+	"""
 	
 	_queue = Queue.Queue()
+	"""PlayerHostQueue._queue
+		The PlayerHostQueue's actual Queue.Queue. 
+		Underscored so that only static methods should access it.
+	"""
 	
 	
 	@classmethod
 	def put_host(PlayerHostQueue, hostname, port):
+		"""PlayerHostQueue.put_host: hostname, port --> adds host to queue. 
+			Constructs a PlayerHost and uses the static queue's put() method.
+		"""
 		pHost = PlayerHost(hostname, port)
 		PlayerHostQueue._queue.put(pHost)
 	
 	@classmethod
 	def get_host(PlayerHostQueue):
+		"""PlayerHostQueue.get_host:   --> a PlayerHost
+			Sleeps for 1s increments until the queue is not empty; 
+			then returns the PlayerHost at the front of the queue. 
+			Note that this behaviour should be achievable by the Queue.Queue's
+			built-in get() method, if the first parameter ("blocking") is set 
+			to True.  In testing, it seemed like this blocked all threads 
+			(stupid global interpreter lock...).  But it's possible that 
+			other code wasn't properly starting the other threads.  
+		"""
 		p = None
 		while p == None:
 			if PlayerHostQueue._queue.empty():
@@ -67,8 +105,13 @@ class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
 		https://docs.python.org/2/library/socketserver.html
 	"""
 	
-	
 	def handle(self):
+		"""ReadyWorkerHandler.handle
+			Reads from the rfile; load it from json; send an okay back; 
+			get out the hostname and port that was sent to us from the worker
+			that reported ready; and then add that player to our queue of 
+			available workers.  
+		"""
 		# Read in from the stream:
 		# Parse the data as json:
 		data = json.load(self.rfile)
@@ -88,12 +131,26 @@ class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
 # Send messages to ready hosts 
 
 class Game(object):
+	"""Game: noun, a competitive activity; not a single instance of one.
+		Represented by the gameKey used to identify a game from ggp servers.
+	"""
 	
 	def __init__(self, gameKey, numPlayers):
+		"""Game.__init__: just store parameters as fields."""
 		self.gameKey = gameKey 
 		self.numPlayers = numPlayers
 
 class Match(object):
+	"""Match: a single instance of a competitive activity. 
+		Keeps track of all elements of this specific instance of a Game:
+			- start clock, play clock 
+			- what gameKey this match is playing
+			- what tourneyKey this match is being played with
+			- what PlayerHost each player is
+			- what player type each player is
+			- how to announce to the PlayerHost what playerType they should 
+				play as
+	"""
 	
 	# These should be externalized with a config file
 	# or, for the current random game.
@@ -133,6 +190,9 @@ class Match(object):
 		
 		
 	def generate_random_match(self):
+		"""Match.generate_random_match: randomly picks the elements of the Match
+			that can be randomly picked.
+		"""
 		# Pick a game
 		game = random.choice(self._availableGames)
 		self.numPlayers = game.numPlayers
@@ -145,9 +205,13 @@ class Match(object):
 				random.choice(self._availablePlayerTypes))
 		
 	def assign_playerHost(self, playerHost):
+		"""Match.assign_playerHost: adds a PlayerHost to list of players."""
 		self._playerHosts.append(playerHost)
 	
 	def _announceGame(self):
+		"""Match._announceGame: all fields set; tell PlayerHosts to start 
+			playing, and what playerType they should play as.
+		"""
 		for i in range(0,self.numPlayers):
 			configuration = {
 				"playerType": self._playerTypes[i], 
@@ -162,6 +226,10 @@ class Match(object):
 		s.close()
 	
 	def playMatch(self):
+		"""Match.playMatch: public method that handles running an individual
+			match: announces to players that they should start up; starts up 
+			a ggp-base game server.
+		"""
 		self._announceGame()
 		self._ggpPlayer = ggpServerProcess.GGPServerProcess(
 			self.tourneyName, 
@@ -187,6 +255,7 @@ class Match(object):
 
 
 class DispatchServer(object):
+	"""DispatchServer: runs; listens for workers; picks games to play."""
 	
 	# These should be externalized with a config file instead of used.
 	default_ourHostname = 'localhost'
@@ -198,6 +267,10 @@ class DispatchServer(object):
 	
 	
 	def __init__(self, random=False):
+		"""DispatchServer.__init__: prepares the server:
+			- builds the TCPServer that will listen for ready workers
+			- preps other info like our tourney name, our hostname, etc.
+		"""
 		self._run_random = random
 		
 		self._ourHostname = DispatchServer.default_ourHostname
@@ -211,6 +284,10 @@ class DispatchServer(object):
 	
 	
 	def run(self):
+		"""DispatchServer.run: starts listening for workers; starts looping 
+			over the games to play. 
+		"""
+		
 		# Start listening for ready workers. 
 		t = threading.Thread(
 			target=self._readyWorkerServer.serve_forever)

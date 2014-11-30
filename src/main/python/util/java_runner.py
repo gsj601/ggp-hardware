@@ -81,7 +81,7 @@ class JavaProcess(object):
 	"""
 	def _construct_classpath_str(self):
 		absolute_prepend = JavaProcess.default_ggpBaseInstall_loc
-		cp = absolute_prepend + "bin/"
+		cp = absolute_prepend + "build/classes/main/"
 	
 		lib_str = absolute_prepend + "lib/"
 	

@@ -6,7 +6,7 @@
 # and it has to be pretty specific.  
 
 lib_st="lib/"
-cp_var="bin/"
+cp_var="build/classes/main/"
 cp_var="${cp_var}:${lib_st}Batik/*"
 cp_var="${cp_var}:${lib_st}Clojure/*"
 cp_var="${cp_var}:${lib_st}FlyingSaucer/*"

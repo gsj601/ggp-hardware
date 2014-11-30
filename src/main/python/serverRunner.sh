@@ -6,7 +6,7 @@
 # and it has to be pretty specific.  
 
 lib_st="/Users/gsj601/git/ggp-hardware.git/lib/"
-cp_var="/Users/gsj601/git/ggp-hardware.git/bin/"
+cp_var="/Users/gsj601/git/ggp-hardware.git/build/classes/main/"
 cp_var="${cp_var}:${lib_st}Batik/*"
 cp_var="${cp_var}:${lib_st}Clojure/*"
 cp_var="${cp_var}:${lib_st}FlyingSaucer/*"

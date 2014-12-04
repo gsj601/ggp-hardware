@@ -312,6 +312,7 @@ class DispatchServer(object):
 		# Start listening for ready workers. 
 		t = threading.Thread(
 			target=self._readyWorkerServer.serve_forever)
+		t.daemon = True
 		t.start()
 		
 		# Read in an experiment config file if there is one.

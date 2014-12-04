@@ -26,20 +26,31 @@ class PlayerHost(object):
 		ready to play a match.
 	"""
 	
-	def __init__(self, hostname, port):
-		"""PlayerHost.__init__(self, hostname, port):
-			str, int --> new PlayerHost with fields set
+	def __init__(self, hostname, pPort, wPort):
+		"""PlayerHost.__init__(self, hostname, pPort, wPort):
+			str, int, int --> new PlayerHost with fields set
 		"""
 		self.hostname = hostname
-		self.port = port
+		self.playerPort = pPort
+		self.workerPort = wPort
 	
-	def get_address_tuple(self):
-		"""PlayerHost.get_address_tuple: PlayerHost -> (str, int)
-			Returns a tuple of the PlayerHost. 
+	def get_player_tuple(self):
+		"""PlayerHost.get_player_tuple: PlayerHost -> (str, int)
+			Returns a tuple of the PlayerHost to talk to ggp-Player 
 			Fields are public; so this is a convenience method for some socket 
 			functions that take an address as (address, port)
 		"""
-		return (self.hostname, self.port)
+		return (self.hostname, self.playerPort)
+	
+	def get_worker_tuple(self):
+		"""PlayerHost.get_address_tuple: PlayerHost -> (str, int)
+			Returns a tuple of the PlayerHost to talk to worker. 
+			Fields are public; so this is a convenience method for some socket 
+			functions that take an address as (address, port)
+		"""
+		return (self.hostname, self.workerPort)
+
+
 	
 
 
@@ -63,11 +74,12 @@ class PlayerHostQueue(object):
 	
 	
 	@classmethod
-	def put_host(PlayerHostQueue, hostname, port):
-		"""PlayerHostQueue.put_host: hostname, port --> adds host to queue. 
+	def put_host(PlayerHostQueue, hostname, pPort, wPort):
+		"""PlayerHostQueue.put_host: hostname, port, port --> 
+				adds host to queue. 
 			Constructs a PlayerHost and uses the static queue's put() method.
 		"""
-		pHost = PlayerHost(hostname, port)
+		pHost = PlayerHost(hostname, pPort, wPort)
 		PlayerHostQueue._queue.put(pHost)
 	
 	@classmethod
@@ -119,9 +131,10 @@ class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
 		self.request.sendall(json.dumps({'return':'ok'}))
 		
 		# Get out the fields we want:
-		hostname, port = (data["hostname"], data["port"])
+		hostname, pPort = (data["hostname"], data["pPort"])
+		wPort = data["wPort"]
 		# Add the ready worker to the queue.  
-		PlayerHostQueue.put_host(hostname, port)
+		PlayerHostQueue.put_host(hostname, pPort, wPort)
 		
 
 
@@ -214,9 +227,9 @@ class Match(object):
 		"""
 		for i in range(0,self.numPlayers):
 			configuration = {
-				"playerType": self._playerTypes[i], 
-				"port": self._playerHosts[i].port
-				}
+					"playerType": self._playerTypes[i], 
+					"pPort": self._playerHosts[i].playerPort
+					}
 			playerHost = self._playerHosts[i]
 			
 		to_send = json.dumps(configuration)
@@ -238,7 +251,7 @@ class Match(object):
 			self.playClock
 			)
 		for playerHost in self._playerHosts:
-			(hostname, port) = playerHost.get_address_tuple()
+			(hostname, port) = playerHost.get_player_tuple()
 			self._ggpPlayer.add_host(hostname, hostname, port)
 		
 		self._ggpPlayer.run()

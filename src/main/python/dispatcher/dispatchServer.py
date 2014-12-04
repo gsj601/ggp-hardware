@@ -231,12 +231,21 @@ class Match(object):
 					"pPort": self._playerHosts[i].playerPort
 					}
 			playerHost = self._playerHosts[i]
-			
-		to_send = json.dumps(configuration)
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect(playerHost.get_address_tuple())
-		s.send(to_send)
-		s.close()
+
+			to_send = json.dumps(configuration)
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			connected = False
+			while not connected:
+				#workerTuple = playerHost.get_worker_tuple() 
+				workerTuple = ("localhost", playerHost.workerPort)
+				try:
+					s.connect(workerTuple)
+					connected = True
+				except socket.error as e:
+					print "DEBUG: couldn't connect to announce game... " + str(workerTuple)
+					time.sleep(1)
+			s.send(to_send)
+			s.close()
 	
 	def playMatch(self):
 		"""Match.playMatch: public method that handles running an individual

@@ -236,8 +236,7 @@ class Match(object):
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			connected = False
 			while not connected:
-				#workerTuple = playerHost.get_worker_tuple() 
-				workerTuple = ("localhost", playerHost.workerPort)
+				workerTuple = playerHost.get_worker_tuple() 
 				try:
 					s.connect(workerTuple)
 					connected = True

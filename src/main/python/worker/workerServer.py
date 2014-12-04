@@ -29,13 +29,19 @@ class WorkerServer(object):
 	default_ourHostname = 'localhost'
 	
 	default_ourPlayerPort = 9147
+	default_ourWorkerPort = 21000
 	
-	def __init__(self, port=None):
+	def __init__(self, pPort=None, wPort=None):
 		"""WorkerServer.__init__: sets address of us and of dispatcher."""
-		if not port == None:
-			self._ourPlayerPort = port
+		if not pPort == None:
+			self._ourPlayerPort = pPort
 		else:
 			self._ourPlayerPort = WorkerServer.default_ourPlayerPort
+		
+		if not wPort == None:
+			self._ourWorkerPort = wPort
+		else:
+			self._ourWorkerPort = WorkerServer.default_ourWorkerPort
 		
 		self._ourHostname = WorkerServer.default_ourHostname
 				
@@ -50,7 +56,8 @@ class WorkerServer(object):
 		"""
 		configuration = {
 			"hostname": self._ourHostname,
-			"port": self._ourPlayerPort
+			"pPort": self._ourPlayerPort,
+			"wPort": self._ourWorkerPort
 			}
 		
 		to_send = json.dumps(configuration)
@@ -68,7 +75,7 @@ class WorkerServer(object):
 			https://wiki.python.org/moin/TcpCommunication
 		"""
 		# The wait half:
-		our_hp = (self._ourHostname, self._ourPlayerPort)
+		our_hp = (self._ourHostname, self._ourWorkerPort)
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.bind(our_hp)
 		s.listen(1)
@@ -77,7 +84,7 @@ class WorkerServer(object):
 		conn.close()
 		
 		# The play half:
-		port, playerType = (data["port"], data["playerType"])
+		port, playerType = (self._ourPlayerPort, data["playerType"])
 		player = ggpPlayerProcess.GGPPlayerProcess(port, playerType)
 		player.run()
 		

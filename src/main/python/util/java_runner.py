@@ -6,6 +6,12 @@ A module for helping you run java as an external process.
 # Standard Imports
 import subprocess
 
+# Setting up logging:
+# https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+import logging
+LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.NullHandler())
+
 
 
 class JavaProcess(object):
@@ -48,6 +54,8 @@ class JavaProcess(object):
 		self._process = None
 		self._stdout = None
 		self._stderr = None
+
+		LOG.debug("JavaProcess constructed for %s", self.class_loc)
 		return
 	
 	def run(self):
@@ -61,8 +69,12 @@ class JavaProcess(object):
 		command_list.append(self.class_loc)
 		command_list.extend(self.args)
 		
+		
 		self._process = subprocess.Popen(command_list)
-		self._process.communicate()
+		LOG.debug("Starting to run %s,%s",self.class_loc, self.args)
+		(o,e) = self._process.communicate()
+		LOG.debug("Finished java process, output: %s", str(o))
+		LOG.debug("Finished java process, error: %s", str(e))
 		return
 	
 	

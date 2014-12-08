@@ -11,9 +11,11 @@ import ggpPlayerProcess
 
 
 
-
-
-
+# Setting up logging:
+# https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+import logging
+LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.NullHandler())
 
 
 
@@ -49,6 +51,9 @@ class WorkerServer(object):
 			WorkerServer.default_dispatchServerAddress, 
 			WorkerServer.default_dispatchServerPort
 			)
+
+		LOG.debug("WorkerServer constructed, %s, %i, %i", 
+				self._ourHostname, self._ourWorkerPort, self._ourPlayerPort)
 	
 	def announce_ready(self):
 		"""WorkerServer.announce_ready(): tell dispatcher we're ready to play, 
@@ -59,11 +64,15 @@ class WorkerServer(object):
 			"pPort": self._ourPlayerPort,
 			"wPort": self._ourWorkerPort
 			}
+		LOG.debug("WorkerServer announcing ready with %s", 
+				configuration)
 		
 		to_send = json.dumps(configuration)
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect(self._dispatcher_hp)
+		LOG.debug("WorkerServer ready announce connected.")
 		s.send(to_send)
+		LOG.debug("WorkerServer ready announce sent.")
 		s.close()
 	
 	def wait_and_play(self):
@@ -74,18 +83,22 @@ class WorkerServer(object):
 		This non-server listening code taken from:
 			https://wiki.python.org/moin/TcpCommunication
 		"""
+		LOG.debug("WorkerServer waiting for match to play.")
 		# The wait half:
 		our_hp = (self._ourHostname, self._ourWorkerPort)
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.bind(our_hp)
 		s.listen(1)
 		conn, addr = s.accept()
+		LOG.debug("WorkerServer received match connection.")
 		data = json.loads(conn.recv(100000).strip())
 		conn.close()
 		
 		# The play half:
 		port, playerType = (self._ourPlayerPort, data["playerType"])
 		player = ggpPlayerProcess.GGPPlayerProcess(port, playerType)
+		LOG.debug("WorkerServer starting player %s, %i", 
+				playerType, port)
 		player.run()
 		
 	

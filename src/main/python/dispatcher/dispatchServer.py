@@ -15,6 +15,13 @@ random.seed()
 import ggpServerProcess
 
 
+# Setting up logging:
+# https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+import logging
+LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.NullHandler())
+
+
 
 
 # Manage the set of player hosts that are ready to play a game.
@@ -81,6 +88,9 @@ class PlayerHostQueue(object):
 		"""
 		pHost = PlayerHost(hostname, pPort, wPort)
 		PlayerHostQueue._queue.put(pHost)
+		LOG.debug(
+				"PlayerHost added to queue, %s, %i, %i", 
+				hostname, pPort, wPort)
 	
 	@classmethod
 	def get_host(PlayerHostQueue):
@@ -99,6 +109,9 @@ class PlayerHostQueue(object):
 				time.sleep(1)
 			else:
 				p = PlayerHostQueue._queue.get(False)
+		LOG.debug(
+				"PlayerHost popped from queue, %s, %i, %i", 
+				p.hostname, p.playerPort, p.workerPort)
 		return p
 		
 	
@@ -124,6 +137,7 @@ class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
 			that reported ready; and then add that player to our queue of 
 			available workers.  
 		"""
+		LOG.debug("Handling ready worker connection.")
 		# Read in from the stream:
 		# Parse the data as json:
 		data = json.load(self.rfile)
@@ -133,6 +147,7 @@ class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
 		# Get out the fields we want:
 		hostname, pPort = (data["hostname"], data["pPort"])
 		wPort = data["wPort"]
+		LOG.info("Handled worker was %s, %s, %s", hostname, pPort, wPort)
 		# Add the ready worker to the queue.  
 		PlayerHostQueue.put_host(hostname, pPort, wPort)
 		
@@ -201,6 +216,9 @@ class Match(object):
 		self._availablePlayerTypes= Match.default_playerTypes
 		self._availableGames = Match.default_games
 		
+		LOG.debug("Constructed a Match, %s, %i, %i", 
+				self.tourneyName, self.startClock, self.playClock)
+		
 		
 	def generate_random_match(self):
 		"""Match.generate_random_match: randomly picks the elements of the Match
@@ -211,15 +229,22 @@ class Match(object):
 		self.numPlayers = game.numPlayers
 		self.gameKey = game.gameKey
 		
+		LOG.debug("Randomly generating a game, %s, %i", 
+				self.gameKey, self.numPlayers)
+
 		# Given a number of players by knowing what game we're playing, 
 		# pick player types for the players.  
 		for player in range(0,self.numPlayers):
 			self._playerTypes.append(
 				random.choice(self._availablePlayerTypes))
+		LOG.debug("Random players will be %s", self._playerTypes)
+
 		
 	def assign_playerHost(self, playerHost):
 		"""Match.assign_playerHost: adds a PlayerHost to list of players."""
 		self._playerHosts.append(playerHost)
+		LOG.debug("Match of %s will be played with %s, %i", 
+				self.gameKey, playerHost.hostname, playerHost.playerPort)
 	
 	def _announceGame(self):
 		"""Match._announceGame: all fields set; tell PlayerHosts to start 
@@ -230,6 +255,8 @@ class Match(object):
 					"playerType": self._playerTypes[i], 
 					"pPort": self._playerHosts[i].playerPort
 					}
+			LOG.debug("Match of %s is announcing to %s",
+					self.gameKey, configuration)
 			playerHost = self._playerHosts[i]
 
 			to_send = json.dumps(configuration)
@@ -241,16 +268,21 @@ class Match(object):
 					s.connect(workerTuple)
 					connected = True
 				except socket.error as e:
-					print "DEBUG: couldn't connect to announce game... " + str(workerTuple)
+					LOG.debug("Couldn't connect to announce game to %s", 
+							workerTuple)
 					time.sleep(1)
+				LOG.debug("Connected to %s to announce game.", 
+						workerTuple)
 			s.send(to_send)
 			s.close()
+			LOG.debug("Announced to %s successfully.", workerTuple)
 	
 	def playMatch(self):
 		"""Match.playMatch: public method that handles running an individual
 			match: announces to players that they should start up; starts up 
 			a ggp-base game server.
 		"""
+		LOG.debug("Match of %s is starting", self.gameKey)
 		self._announceGame()
 		self._ggpPlayer = ggpServerProcess.GGPServerProcess(
 			self.tourneyName, 
@@ -262,6 +294,7 @@ class Match(object):
 			(hostname, port) = playerHost.get_player_tuple()
 			self._ggpPlayer.add_host(hostname, hostname, port)
 		
+		LOG.debug("Match of %s will be run now", self.gameKey)
 		self._ggpPlayer.run()
 			
 
@@ -302,6 +335,7 @@ class DispatchServer(object):
 			h_p, ReadyWorkerHandler)
 		
 		self._tourneyName = DispatchServer.default_tourneyName
+		LOG.debug("Dispatch Server constructed.")
 	
 	
 	def run(self):
@@ -310,21 +344,26 @@ class DispatchServer(object):
 		"""
 		
 		# Start listening for ready workers. 
+		LOG.info("Starting listening for ready workers.")
 		t = threading.Thread(
 			target=self._readyWorkerServer.serve_forever)
 		t.daemon = True
 		t.start()
+		LOG.debug("Listening for ready workers started.")
 		
 		# Read in an experiment config file if there is one.
 		
 		# If there isn't (or if reading from config file isn't working yet...)
 		if self._run_random:
+			LOG.info("Dispatch server will run random games.")
 			while True: 
 				self._currentMatch = Match(self._tourneyName)
 				self._currentMatch.generate_random_match()
+				LOG.debug("Dispatch server has random match ready.")
 				for i in range(self._currentMatch.numPlayers):
 					playerHost = PlayerHostQueue.get_host()
 					self._currentMatch.assign_playerHost(playerHost)
+				LOG.info("Match starting.")
 				self._currentMatch.playMatch()
 				
 				

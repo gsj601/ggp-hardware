@@ -5,6 +5,13 @@
 import util.java_runner
 
 
+# Setting up logging:
+# https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+import logging
+LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.NullHandler())
+
+
 
 
 class GGPServerProcess(util.java_runner.JavaProcess):
@@ -56,6 +63,10 @@ class GGPServerProcess(util.java_runner.JavaProcess):
 
 		# The remaining arguments should be constructed after adding hosts!
 		
+		LOG.debug(
+				"GGPServer constructed, %s,%s", 
+				self._tourneyName, self._gameKey)
+		
 	
 	def add_host(self, hostName, playerName, portNumber):
 		"""GGPServerProcess.add_host(self, hostName, playerName, portNumber)
@@ -68,6 +79,10 @@ class GGPServerProcess(util.java_runner.JavaProcess):
 		# Add the host to our fields
 		self._hosts.append(newHost)
 		self.args.extend(newArgs)
+
+		LOG.debug(
+				"GGPServer added host to play, %s,%s,%i", 
+				hostName, playerName, portNumber)
 
 
 	def _construct_ggpServerClass_loc(self):

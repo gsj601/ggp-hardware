@@ -6,6 +6,14 @@ import util.java_runner
 
 
 
+# Setting up logging:
+# https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+import logging
+LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.NullHandler())
+
+
+
 
 class GGPPlayerProcess(util.java_runner.JavaProcess):
 	"""GGPPlayerProcess
@@ -40,6 +48,9 @@ class GGPPlayerProcess(util.java_runner.JavaProcess):
 		self.args.append(str(self._port))
 		# args[1]: name: the class name of the player to play as
 		self.args.append(self._playerClass)
+
+		LOG.debug("GGPPlayerProcess constructed, %s, %i", 
+				self._playerClass, self._port)
 		
 	
 	

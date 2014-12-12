@@ -200,6 +200,9 @@ class Match(object):
 		Game("ticTacToe", 2)
 		]
 	
+	_availablePlayerTypes = default_playerTypes
+	_availableGames = default_games
+	
 	def __init__(self, tourneyName):
 		# Initialize fields that are set with arguments
 		self.tourneyName = tourneyName
@@ -213,9 +216,6 @@ class Match(object):
 		self.startClock = Match.default_startClock
 		self.playClock = Match.default_playClock
 		
-		self._availablePlayerTypes= Match.default_playerTypes
-		self._availableGames = Match.default_games
-		
 		LOG.debug("Constructed a Match, %s, %i, %i", 
 				self.tourneyName, self.startClock, self.playClock)
 		
@@ -225,7 +225,7 @@ class Match(object):
 			that can be randomly picked.
 		"""
 		# Pick a game
-		game = random.choice(self._availableGames)
+		game = random.choice(Match._availableGames)
 		self.numPlayers = game.numPlayers
 		self.gameKey = game.gameKey
 		
@@ -236,7 +236,7 @@ class Match(object):
 		# pick player types for the players.  
 		for player in range(0,self.numPlayers):
 			self._playerTypes.append(
-				random.choice(self._availablePlayerTypes))
+				random.choice(Match._availablePlayerTypes))
 		LOG.debug("Random players will be %s", self._playerTypes)
 
 		

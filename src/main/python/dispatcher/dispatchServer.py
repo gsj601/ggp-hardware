@@ -209,7 +209,7 @@ class Match(object):
 		
 		# Initialize fields that are set elsewhere
 		self._playerHosts = []
-		self._playerTypes = []
+		self.playerTypes = []
 		self.numPlayers = None
 		self.gameKey = None
 		
@@ -218,6 +218,29 @@ class Match(object):
 		
 		LOG.debug("Constructed a Match, %s, %i, %i", 
 				self.tourneyName, self.startClock, self.playClock)
+	
+	def from_dict(self, fields):
+		"""Match.from_dict: Sets our fields to those in the parameter dict.
+			This is for building a Match object from json, eg:
+			a_dict = json.loads(a string from a file)
+			a_match.from_dict(a_dict)
+		"""
+		for field in fields:
+			self.__dict__[field] = fields[field]
+	
+	def to_dict(self):
+		"""Match.to_dict: Returns a dict of the fields of this Match.
+			This is for outputting a Match to a file, eg:
+			a_dict = a_match.to_dict()
+			print json.dumps(a_dict)
+			Note: Excludes fields whose names start with underscores.
+		"""
+		result = {}
+		for field in self.__dict__:
+			# Only copy "non-private" fields, without underscores
+			if not field[0] == "_":
+				result[field] = self.__dict__[field]
+		return result
 		
 		
 	def generate_random_match(self):
@@ -235,9 +258,9 @@ class Match(object):
 		# Given a number of players by knowing what game we're playing, 
 		# pick player types for the players.  
 		for player in range(0,self.numPlayers):
-			self._playerTypes.append(
+			self.playerTypes.append(
 				random.choice(Match._availablePlayerTypes))
-		LOG.debug("Random players will be %s", self._playerTypes)
+		LOG.debug("Random players will be %s", self.playerTypes)
 
 		
 	def assign_playerHost(self, playerHost):
@@ -252,7 +275,7 @@ class Match(object):
 		"""
 		for i in range(0,self.numPlayers):
 			configuration = {
-					"playerType": self._playerTypes[i], 
+					"playerType": self.playerTypes[i], 
 					"pPort": self._playerHosts[i].playerPort
 					}
 			LOG.debug("Match of %s is announcing to %s",
@@ -296,6 +319,7 @@ class Match(object):
 		
 		LOG.debug("Match of %s will be run now", self.gameKey)
 		self._ggpPlayer.run()
+		LOG.info("Match finished: %s", self.to_dict())
 			
 
 

@@ -361,6 +361,17 @@ class DispatchServer(object):
 		self._tourneyName = DispatchServer.default_tourneyName
 		LOG.debug("Dispatch Server constructed.")
 	
+	def _playMatch(self, matchArgs):
+		self._currentMatch = Match(self._tourneyName)
+		self._currentMatch.generate_random_match()
+		LOG.debug("Setting match to %s", matchArgs)
+		self._currentMatch.from_dict(matchArgs)
+		LOG.debug("Dispatch server has match ready.")
+		for i in range(self._currentMatch.numPlayers):
+			playerHost = PlayerHostQueue.get_host()
+			self._currentMatch.assign_playerHost(playerHost)
+		LOG.info("Match starting.")
+		self._currentMatch.playMatch()
 	
 	def run(self):
 		"""DispatchServer.run: starts listening for workers; starts looping 
@@ -381,14 +392,8 @@ class DispatchServer(object):
 		if self._run_random:
 			LOG.info("Dispatch server will run random games.")
 			while True: 
-				self._currentMatch = Match(self._tourneyName)
-				self._currentMatch.generate_random_match()
-				LOG.debug("Dispatch server has random match ready.")
-				for i in range(self._currentMatch.numPlayers):
-					playerHost = PlayerHostQueue.get_host()
-					self._currentMatch.assign_playerHost(playerHost)
-				LOG.info("Match starting.")
-				self._currentMatch.playMatch()
+				an_empty_dict = {}
+				self._playMatch( an_empty_dict )
 				
 				
 		

@@ -341,6 +341,7 @@ class DispatchServer(object):
 	
 	default_tourneyName = "testing"
 	
+	default_experimentFileLoc = "matches.expr"
 	
 	
 	
@@ -360,6 +361,16 @@ class DispatchServer(object):
 		
 		self._tourneyName = DispatchServer.default_tourneyName
 		LOG.debug("Dispatch Server constructed.")
+		
+		experimentFile_loc = DispatchServer.default_experimentFileLoc
+		self.experimentFile = None
+		try:
+			self.experimentFile = open(experimentFile_loc)
+			LOG.info("Match file read, %s", 
+				experimentFile_loc)
+		except IOError as e:
+			LOG.debug("Couldn't find experiment file %s, %s", 
+				experimentFile_loc, e.message)
 	
 	def _playMatch(self, matchArgs):
 		self._currentMatch = Match(self._tourneyName)
@@ -387,6 +398,18 @@ class DispatchServer(object):
 		LOG.debug("Listening for ready workers started.")
 		
 		# Read in an experiment config file if there is one.
+		matches = []
+		if not self.experimentFile == None:
+			try:
+				matches = json.load(self.experimentFile)
+				LOG.info("Matches read from file.")
+			except Exception as e:
+				LOG.warn("Couldn't read experiment file, error was: %s", 
+					e.message)
+			finally:
+				self.experimentFile.close()
+		for match_description in matches:
+			self._playMatch( match_description )
 		
 		# If there isn't (or if reading from config file isn't working yet...)
 		if self._run_random:

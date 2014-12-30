@@ -33,8 +33,10 @@ class WorkerServer(object):
 	default_ourPlayerPort = 9147
 	default_ourWorkerPort = 21000
 	
-	def __init__(self, pPort=None, wPort=None):
+	def __init__(self, config, pPort=None, wPort=None):
 		"""WorkerServer.__init__: sets address of us and of dispatcher."""
+		self.config = config
+		
 		if not pPort == None:
 			self._ourPlayerPort = pPort
 		else:
@@ -96,7 +98,7 @@ class WorkerServer(object):
 		
 		# The play half:
 		port, playerType = (self._ourPlayerPort, data["playerType"])
-		player = ggpPlayerProcess.GGPPlayerProcess(port, playerType)
+		player = ggpPlayerProcess.GGPPlayerProcess(self.config, port, playerType)
 		LOG.debug("WorkerServer starting player %s, %i", 
 				playerType, port)
 		player.run()

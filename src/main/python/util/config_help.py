@@ -1,6 +1,7 @@
 
 
 import json
+import logging
 
 
 
@@ -17,8 +18,18 @@ class Config(object):
 	def configFrom_dict(cls, d):
 		"""Config object constructed with defaults, but overriden from dict"""
 		c = cls()
-		for key in d:
-			c.__dict__[key] = d[key]
+		specific_config = {}
+		try:
+			specific_config = d[c.for_classname]
+		except KeyError as e:
+			logging.getLogger("Config").warn(
+				"Couldn't get config section for class " + c.for_classname
+				)
+			logging.getLogger("Config").debug(
+				"Config dictionary was : " + str(d)
+				)
+		for key in specific_config:
+			c.__dict__[key] = specific_config[key]
 		return c
 	
 	def _set_defaults(self):

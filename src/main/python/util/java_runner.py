@@ -22,7 +22,7 @@ class JavaProcess(object):
 		Has built-in tools for building the appropriate classpath, etc.
 	"""
 
-	def __init__(self, class_loc, args=[]):
+	def __init__(self, config, class_loc, args=[]):
 		"""JavaProcess.__init__(self, class_loc, args=[])
 			Initializes an external Java process. 
 			class_loc: the location, relative to classpath, where the 
@@ -30,7 +30,8 @@ class JavaProcess(object):
 			args: a list of strings, where each is a command-line argument
 				to the external Java process. (Default: no args; empty list.) 
 		"""
-		JavaProcess.config = JavaProcessConfig()
+		JavaProcess.config = JavaProcessConfig.configFrom_dict(config)
+		
 		
 		self._cp = self._construct_classpath_str()
 		self.class_loc = class_loc
@@ -85,6 +86,8 @@ class JavaProcess(object):
 
 
 class JavaProcessConfig(config_help.Config):
+	
+	for_classname = "JavaProcess"
 	
 	defaults = {
 		'java_libs': [

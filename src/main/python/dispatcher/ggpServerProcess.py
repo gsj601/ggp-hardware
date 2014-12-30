@@ -24,7 +24,7 @@ class GGPServerProcess(util.java_runner.JavaProcess):
 	# This should be externalized with a config file
 	default_ggpServerClass_loc = "org/ggp/base/apps/utilities/GameServerRunner"
 
-	def __init__(self, tourneyName, gameKey, startClock, playClock):
+	def __init__(self, config, tourneyName, gameKey, startClock, playClock):
 		"""GGPServerProcess.__init__(self, 
 				tourneyName, gameKey, startClock, playClock)
 			self, str, str, int, int -> new GGPServerProcess
@@ -37,7 +37,8 @@ class GGPServerProcess(util.java_runner.JavaProcess):
 		"""
 		# Call super constructor:
 		self._ggpServerClass_loc = self._construct_ggpServerClass_loc()
-		super(GGPServerProcess, self).__init__(self._ggpServerClass_loc)
+		super(GGPServerProcess, self).__init__(
+			config, self._ggpServerClass_loc)
 		
 		# Set fields from arguments:
 		self._tourneyName = tourneyName

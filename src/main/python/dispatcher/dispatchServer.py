@@ -203,7 +203,8 @@ class Match(object):
 	_availablePlayerTypes = default_playerTypes
 	_availableGames = default_games
 	
-	def __init__(self, tourneyName):
+	def __init__(self, config, tourneyName):
+		self.config = config
 		# Initialize fields that are set with arguments
 		self.tourneyName = tourneyName
 		
@@ -308,6 +309,7 @@ class Match(object):
 		LOG.debug("Match of %s is starting", self.gameKey)
 		self._announceGame()
 		self._ggpPlayer = ggpServerProcess.GGPServerProcess(
+			self.config,
 			self.tourneyName, 
 			self.gameKey,
 			self.startClock,
@@ -345,11 +347,13 @@ class DispatchServer(object):
 	
 	
 	
-	def __init__(self, random=False):
+	def __init__(self, config, random):
 		"""DispatchServer.__init__: prepares the server:
 			- builds the TCPServer that will listen for ready workers
 			- preps other info like our tourney name, our hostname, etc.
 		"""
+		self.config = config
+		
 		self._run_random = random
 		
 		self._ourHostname = DispatchServer.default_ourHostname
@@ -373,7 +377,7 @@ class DispatchServer(object):
 				experimentFile_loc, e.message)
 	
 	def _playMatch(self, matchArgs):
-		self._currentMatch = Match(self._tourneyName)
+		self._currentMatch = Match(self.config, self._tourneyName)
 		self._currentMatch.generate_random_match()
 		LOG.debug("Setting match to %s", matchArgs)
 		self._currentMatch.from_dict(matchArgs)

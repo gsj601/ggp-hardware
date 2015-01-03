@@ -19,7 +19,7 @@ class Config(object):
 	
 	@classmethod
 	def configFrom_dict(cls, d):
-		"""Config object constructed with defaults, but overriden from dict"""
+		"""Config object built with defaults, but overriden from dict"""
 		c = cls()
 		specific_config = {}
 		try:

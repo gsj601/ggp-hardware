@@ -200,24 +200,48 @@ class Match(object):
 		Game("ticTacToe", 2)
 		]
 	
-	def __init__(self, tourneyName):
+	_availablePlayerTypes = default_playerTypes
+	_availableGames = default_games
+	
+	def __init__(self, config, tourneyName):
+		self.config = config
 		# Initialize fields that are set with arguments
 		self.tourneyName = tourneyName
 		
 		# Initialize fields that are set elsewhere
 		self._playerHosts = []
-		self._playerTypes = []
+		self.playerTypes = []
 		self.numPlayers = None
 		self.gameKey = None
 		
 		self.startClock = Match.default_startClock
 		self.playClock = Match.default_playClock
 		
-		self._availablePlayerTypes= Match.default_playerTypes
-		self._availableGames = Match.default_games
-		
 		LOG.debug("Constructed a Match, %s, %i, %i", 
 				self.tourneyName, self.startClock, self.playClock)
+	
+	def from_dict(self, fields):
+		"""Match.from_dict: Sets our fields to those in the parameter dict.
+			This is for building a Match object from json, eg:
+			a_dict = json.loads(a string from a file)
+			a_match.from_dict(a_dict)
+		"""
+		for field in fields:
+			self.__dict__[field] = fields[field]
+	
+	def to_dict(self):
+		"""Match.to_dict: Returns a dict of the fields of this Match.
+			This is for outputting a Match to a file, eg:
+			a_dict = a_match.to_dict()
+			print json.dumps(a_dict)
+			Note: Excludes fields whose names start with underscores.
+		"""
+		result = {}
+		for field in self.__dict__:
+			# Only copy "non-private" fields, without underscores
+			if not field[0] == "_":
+				result[field] = self.__dict__[field]
+		return result
 		
 		
 	def generate_random_match(self):
@@ -225,7 +249,7 @@ class Match(object):
 			that can be randomly picked.
 		"""
 		# Pick a game
-		game = random.choice(self._availableGames)
+		game = random.choice(Match._availableGames)
 		self.numPlayers = game.numPlayers
 		self.gameKey = game.gameKey
 		
@@ -235,9 +259,9 @@ class Match(object):
 		# Given a number of players by knowing what game we're playing, 
 		# pick player types for the players.  
 		for player in range(0,self.numPlayers):
-			self._playerTypes.append(
-				random.choice(self._availablePlayerTypes))
-		LOG.debug("Random players will be %s", self._playerTypes)
+			self.playerTypes.append(
+				random.choice(Match._availablePlayerTypes))
+		LOG.debug("Random players will be %s", self.playerTypes)
 
 		
 	def assign_playerHost(self, playerHost):
@@ -252,7 +276,7 @@ class Match(object):
 		"""
 		for i in range(0,self.numPlayers):
 			configuration = {
-					"playerType": self._playerTypes[i], 
+					"playerType": self.playerTypes[i], 
 					"pPort": self._playerHosts[i].playerPort
 					}
 			LOG.debug("Match of %s is announcing to %s",
@@ -285,6 +309,7 @@ class Match(object):
 		LOG.debug("Match of %s is starting", self.gameKey)
 		self._announceGame()
 		self._ggpPlayer = ggpServerProcess.GGPServerProcess(
+			self.config,
 			self.tourneyName, 
 			self.gameKey,
 			self.startClock,
@@ -296,6 +321,7 @@ class Match(object):
 		
 		LOG.debug("Match of %s will be run now", self.gameKey)
 		self._ggpPlayer.run()
+		LOG.info("Match finished: %s", self.to_dict())
 			
 
 
@@ -317,14 +343,17 @@ class DispatchServer(object):
 	
 	default_tourneyName = "testing"
 	
+	default_experimentFileLoc = "matches.expr"
 	
 	
 	
-	def __init__(self, random=False):
+	def __init__(self, config, random):
 		"""DispatchServer.__init__: prepares the server:
 			- builds the TCPServer that will listen for ready workers
 			- preps other info like our tourney name, our hostname, etc.
 		"""
+		self.config = config
+		
 		self._run_random = random
 		
 		self._ourHostname = DispatchServer.default_ourHostname
@@ -336,7 +365,28 @@ class DispatchServer(object):
 		
 		self._tourneyName = DispatchServer.default_tourneyName
 		LOG.debug("Dispatch Server constructed.")
+		
+		experimentFile_loc = DispatchServer.default_experimentFileLoc
+		self.experimentFile = None
+		try:
+			self.experimentFile = open(experimentFile_loc)
+			LOG.info("Match file read, %s", 
+				experimentFile_loc)
+		except IOError as e:
+			LOG.debug("Couldn't find experiment file %s, %s", 
+				experimentFile_loc, e.message)
 	
+	def _playMatch(self, matchArgs):
+		self._currentMatch = Match(self.config, self._tourneyName)
+		self._currentMatch.generate_random_match()
+		LOG.debug("Setting match to %s", matchArgs)
+		self._currentMatch.from_dict(matchArgs)
+		LOG.debug("Dispatch server has match ready.")
+		for i in range(self._currentMatch.numPlayers):
+			playerHost = PlayerHostQueue.get_host()
+			self._currentMatch.assign_playerHost(playerHost)
+		LOG.info("Match starting.")
+		self._currentMatch.playMatch()
 	
 	def run(self):
 		"""DispatchServer.run: starts listening for workers; starts looping 
@@ -352,19 +402,25 @@ class DispatchServer(object):
 		LOG.debug("Listening for ready workers started.")
 		
 		# Read in an experiment config file if there is one.
+		matches = []
+		if not self.experimentFile == None:
+			try:
+				matches = json.load(self.experimentFile)
+				LOG.info("Matches read from file.")
+			except Exception as e:
+				LOG.warn("Couldn't read experiment file, error was: %s", 
+					e.message)
+			finally:
+				self.experimentFile.close()
+		for match_description in matches:
+			self._playMatch( match_description )
 		
 		# If there isn't (or if reading from config file isn't working yet...)
 		if self._run_random:
 			LOG.info("Dispatch server will run random games.")
 			while True: 
-				self._currentMatch = Match(self._tourneyName)
-				self._currentMatch.generate_random_match()
-				LOG.debug("Dispatch server has random match ready.")
-				for i in range(self._currentMatch.numPlayers):
-					playerHost = PlayerHostQueue.get_host()
-					self._currentMatch.assign_playerHost(playerHost)
-				LOG.info("Match starting.")
-				self._currentMatch.playMatch()
+				an_empty_dict = {}
+				self._playMatch( an_empty_dict )
 				
 				
 		

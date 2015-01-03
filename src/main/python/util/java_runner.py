@@ -2,6 +2,8 @@
 A module for helping you run java as an external process.
 """
 
+# Local libraries
+import config_help
 
 # Standard Imports
 import subprocess
@@ -20,25 +22,7 @@ class JavaProcess(object):
 		Has built-in tools for building the appropriate classpath, etc.
 	"""
 
-	# This list should be externalized with a config file later.
-	default_java_libs = [
-			"Batik",
-			"Clojure",
-			"FlyingSaucer",
-			"Guava",
-			"Htmlparser",
-			"JFreeChart",
-			"JGoodiesForms",
-			"JUnit",
-			"Jython",
-			"javassist",
-			"reflections"
-			]
-
-	# This string should be externalized with a config file later. 
-	default_ggpBaseInstall_loc = "/Users/gsj601/git/ggp-hardware.git/"
-	
-	def __init__(self, class_loc, args=[]):
+	def __init__(self, config, class_loc, args=[]):
 		"""JavaProcess.__init__(self, class_loc, args=[])
 			Initializes an external Java process. 
 			class_loc: the location, relative to classpath, where the 
@@ -46,7 +30,9 @@ class JavaProcess(object):
 			args: a list of strings, where each is a command-line argument
 				to the external Java process. (Default: no args; empty list.) 
 		"""
-		self._java_libs = self._construct_libs()
+		JavaProcess.config = JavaProcessConfig.configFrom_dict(config)
+		
+		
 		self._cp = self._construct_classpath_str()
 		self.class_loc = class_loc
 		self.args = args
@@ -57,6 +43,10 @@ class JavaProcess(object):
 
 		LOG.debug("JavaProcess constructed for %s", self.class_loc)
 		return
+	
+	@classmethod
+	def set_config(cls, config):
+		cls.config = config
 	
 	def run(self):
 		"""JavaProcess.run(self):
@@ -77,31 +67,44 @@ class JavaProcess(object):
 		LOG.debug("Finished java process, error: %s", str(e))
 		return
 	
-	
-	def _construct_libs(self):
-		"""_construct_libs:
-			 --> [string]
-			Each string returned is the name of a folder in lib/ to use.
-		"""
-		# For now, just return the default one! 
-		return JavaProcess.default_java_libs
-	
 	def _construct_classpath_str(self):
 		"""_construct_classpath_str:
 			 --> string
 			The string returned contains a Java classpath.
 			Requires the absolute path of the installation of ggp-base. 
 		"""
-		absolute_prepend = JavaProcess.default_ggpBaseInstall_loc
+		absolute_prepend = JavaProcess.config.ggpBaseInstall_loc
 		cp = absolute_prepend + "build/classes/main/"
 	
 		lib_str = absolute_prepend + "lib/"
 	
-		for lib in self._java_libs:
+		for lib in JavaProcess.config.java_libs:
 			cp = cp + ":" + lib_str + lib + "/*"
 	
 		return cp
 	
 
+
+class JavaProcessConfig(config_help.Config):
+	
+	for_classname = "JavaProcess"
+	
+	defaults = {
+		'java_libs': [
+			"Batik",
+			"Clojure",
+			"FlyingSaucer",
+			"Guava",
+			"Htmlparser",
+			"JFreeChart",
+			"JGoodiesForms",
+			"JUnit",
+			"Jython",
+			"javassist",
+			"reflections"
+			], 
+		'ggpBaseInstall_loc' : 
+			"/Users/gsj601/git/ggp-hardware.git/"
+		}
 
 

@@ -5,6 +5,7 @@ import util.logging_help
 
 # Library imports
 import optparse
+import json
 
 # Set up logging
 import logging
@@ -33,6 +34,12 @@ parser.add_option("-v", "--verbose",
 		help="Turn logging level to VERBOSE.",
 		action="store_true"
 		)
+default_config_file = "system.conf"
+parser.add_option("-j", "--json-config-file",
+		dest="json_config_file",
+		help="What JSON-formatted config file to read.",
+		default=default_config_file
+		)
 (options, args) = parser.parse_args()
 
 # Change the file location for this worker, now that we know the port.
@@ -54,9 +61,24 @@ else:
 			logging.getLogger(),
 			logging.WARN)
 
+config = {}
+try:
+	f = open(options.json_config_file)
+	config = json.load(f)
+except IOError as e:
+	if options.json_config_file != default_config_file:
+		logging.getLogger("worker").error(
+			"Couldn't find non-default config file."
+			)
+		logging.getLogger("worker").error(e.message)
+	else:
+		logging.getLogger("worker").debug(
+			"Couldn't find default config file, ignoring."
+			)
+
 
 pPort = int(options.pPort)
 wPort = int(options.wPort)
-ws = worker.workerServer.WorkerServer(pPort, wPort)
+ws = worker.workerServer.WorkerServer(config, pPort, wPort)
 ws.run()
 

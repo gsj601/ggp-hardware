@@ -25,7 +25,7 @@ class GGPPlayerProcess(util.java_runner.JavaProcess):
 	# This should be externalized with a config file
 	default_ggpPlayerClass_loc = "org/ggp/base/apps/player/PlayerRunner"
 
-	def __init__(self, port, playerClass):
+	def __init__(self, config, port, playerClass):
 		"""GGPPlayerProcess.__init__(self, port, playerClass)
 			Initialize the GGPPlayerProcess.  
 			The class to run is not a parameter, but instead is externalized. 
@@ -34,7 +34,9 @@ class GGPPlayerProcess(util.java_runner.JavaProcess):
 		"""
 		# Call superconstructor
 		self._ggpPlayerClass_loc = self._construct_ggpPlayerClass_loc()
-		super(GGPPlayerProcess, self).__init__(self._ggpPlayerClass_loc)
+		super(GGPPlayerProcess, self).__init__(
+			config, self._ggpPlayerClass_loc
+			)
 		
 		# Set fields:
 		self._port = port

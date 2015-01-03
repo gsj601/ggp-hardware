@@ -5,6 +5,7 @@ import dispatcher.dispatchServer
 
 # Library imports
 import optparse
+import json
 
 # Setup logging
 import logging
@@ -21,6 +22,12 @@ parser.add_option("-v", "--verbose",
 		dest="verbose",
 		help="Turn logging level to VERBOSE.",
 		action="store_true"
+		)
+default_config_file = "system.conf"
+parser.add_option("-j", "--json-config-file",
+		dest="json_config_file",
+		help="What JSON-formatted config file to read.",
+		default=default_config_file
 		)
 (options, args) = parser.parse_args()
 
@@ -39,8 +46,23 @@ else:
 			logging.getLogger(),
 			logging.WARN)
 
+config = {}
+try:
+	f = open(options.json_config_file)
+	config = json.load(f)
+except IOError as e:
+	if options.json_config_file != default_config_file:
+		logging.getLogger("dispatcher").error(
+			"Couldn't find non-default config file."
+			)
+		logging.getLogger("dispatcher").error(e.message)
+	else:
+		logging.getLogger("dispatcher").debug(
+			"Couldn't find default config file, ignoring."
+			)
 
-ds = dispatcher.dispatchServer.DispatchServer(random=True)
+
+ds = dispatcher.dispatchServer.DispatchServer(config, random=True)
 ds.run()
 
 

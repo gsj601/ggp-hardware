@@ -421,6 +421,8 @@ class DispatchServer(object):
 			while True: 
 				an_empty_dict = {}
 				self._playMatch( an_empty_dict )
+		
+		LOG.info("Dispatcher is finished work.")
 				
 				
 		

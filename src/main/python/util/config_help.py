@@ -11,6 +11,9 @@ class Config(object):
 		http://www.infoq.com/articles/5-config-mgmt-best-practices
 	"""
 	
+	defaults = []
+	for_classname = ""
+	
 	def __init__(self):
 		self._set_defaults()
 	

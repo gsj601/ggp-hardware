@@ -13,6 +13,11 @@ import logging.config
 logging.config.fileConfig("logging.d.conf",disable_existing_loggers=False)
 
 parser = optparse.OptionParser()
+parser.add_option("-r", "--random",
+		dest="random",
+		help="Turn on playing random games when config file is exhausted.",
+		action="store_true"
+		)
 parser.add_option("-d", "--debug",
 		dest="debug",
 		help="Turn logging level to DEBUG.",
@@ -62,7 +67,7 @@ except IOError as e:
 			)
 
 
-ds = dispatcher.dispatchServer.DispatchServer(config, random=True)
+ds = dispatcher.dispatchServer.DispatchServer(config, options.random)
 ds.run()
 
 

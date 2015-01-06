@@ -69,13 +69,18 @@ class WorkerServer(object):
 		LOG.debug("WorkerServer announcing ready with %s", 
 				configuration)
 		
-		to_send = json.dumps(configuration)
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect(self._dispatcher_hp)
-		LOG.debug("WorkerServer ready announce connected.")
-		s.send(to_send)
-		LOG.debug("WorkerServer ready announce sent.")
-		s.close()
+		try:
+			to_send = json.dumps(configuration)
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect(self._dispatcher_hp)
+			LOG.debug("WorkerServer ready announce connected.")
+			s.send(to_send)
+			LOG.debug("WorkerServer ready announce sent.")
+			s.close()
+		except socket.error as e:
+			LOG.info(
+				"Shutting down WorkerServer because no DispatchServer found.")
+			self.running = False
 	
 	def wait_and_play(self):
 		"""WorkerServer.wait_and_play: wait for notification of match 

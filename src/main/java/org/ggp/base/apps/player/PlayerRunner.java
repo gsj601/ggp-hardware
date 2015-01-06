@@ -28,12 +28,15 @@ public final class PlayerRunner
     	System.out.println("Starting up preconfigured player on port " + port + " using player class named " + name);
     	Class<?> chosenGamerClass = null;
     	List<String> availableGamers = new ArrayList<String>();
+    	long startTime = System.nanoTime();
     	for (Class<?> gamerClass : ProjectSearcher.GAMERS.getConcreteClasses()) {
     		availableGamers.add(gamerClass.getSimpleName());
     		if (gamerClass.getSimpleName().equals(name)) {
     			chosenGamerClass = gamerClass;
     		}
     	}
+    	long endTime = System.nanoTime();
+    	System.out.println("PlayerRunner took " + (endTime - startTime)/1000000 + "ms to find Gamer class.");
     	if (chosenGamerClass == null) {
     		System.out.println("Could not find player class with that name. Available choices are: " + Arrays.toString(availableGamers.toArray()));
     		return;

@@ -91,22 +91,33 @@ class WorkerServer(object):
 			https://wiki.python.org/moin/TcpCommunication
 		"""
 		LOG.debug("WorkerServer waiting for match to play.")
-		# The wait half:
-		our_hp = (self._ourHostname, self._ourWorkerPort)
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.bind(our_hp)
-		s.listen(1)
-		conn, addr = s.accept()
-		LOG.debug("WorkerServer received match connection.")
-		data = json.loads(conn.recv(100000).strip())
-		conn.close()
+		try:
+			# The wait half:
+			our_hp = (self._ourHostname, self._ourWorkerPort)
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.settimeout(10)
+			s.bind(our_hp)
+			s.listen(1)
+			conn, addr = s.accept()
+			LOG.debug("WorkerServer received match connection.")
+			data = json.loads(conn.recv(100000).strip())
+			conn.close()
 		
-		# The play half:
-		port, playerType = (self._ourPlayerPort, data["playerType"])
-		player = ggpPlayerProcess.GGPPlayerProcess(self.config, port, playerType)
-		LOG.debug("WorkerServer starting player %s, %i", 
-				playerType, port)
-		player.run()
+			# The play half:
+			port, playerType = (self._ourPlayerPort, data["playerType"])
+			player = ggpPlayerProcess.GGPPlayerProcess(
+				self.config, port, playerType)
+			LOG.debug("WorkerServer starting player %s, %i", 
+					playerType, port)
+			player.run()
+		except socket.timeout as e:
+			LOG.info("Shutting down WorkerServer after not hearing about a game.")
+			self.running = False
+		except Exception as e:
+			LOG.warn("Other problem with waiting for match to play.")
+			LOG.warn(e.message)
+			
+		
 		
 	
 	def run(self):

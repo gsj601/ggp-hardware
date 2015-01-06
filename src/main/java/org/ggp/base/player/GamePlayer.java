@@ -96,6 +96,12 @@ public final class GamePlayer extends Thread implements Subject
 				Request request = new RequestFactory().create(gamer, in);
 				String out = request.process(System.currentTimeMillis());
 
+				// If the gamer processed the request that was to finish a match,
+				// then the GamePlayer should shutdown.
+				if (gamer.getMatch() == null) {
+					this.shutdown();
+				}
+
 				HttpWriter.writeAsServer(connection, out);
 				connection.close();
 				notifyObservers(new PlayerSentMessageEvent(out));

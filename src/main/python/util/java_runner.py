@@ -61,6 +61,8 @@ class JavaProcess(object):
 		
 		
 		self._process = subprocess.Popen(command_list)
+		#self._process = subprocess.Popen(
+		#	command_list, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		LOG.debug("Starting to run %s,%s",self.class_loc, self.args)
 		(o,e) = self._process.communicate()
 		LOG.debug("Finished java process, output: %s", str(o))

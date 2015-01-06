@@ -111,7 +111,8 @@ class WorkerServer(object):
 	
 	def run(self):
 		"""WorkerServer.run(): just loops: announcing ready, wait to play."""
-		while True:
+		self.running = True
+		while self.running:
 			# Tell the dispatcher we're ready to play a game.  
 			self.announce_ready()
 			# Then wait to hear about what playerType to play as, and 

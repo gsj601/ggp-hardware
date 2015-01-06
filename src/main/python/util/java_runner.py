@@ -74,9 +74,9 @@ class JavaProcess(object):
 			Requires the absolute path of the installation of ggp-base. 
 		"""
 		absolute_prepend = JavaProcess.config.ggpBaseInstall_loc
-		cp = absolute_prepend + "build/classes/main/"
+		cp = absolute_prepend + JavaProcess.config.javaBin_loc
 	
-		lib_str = absolute_prepend + "lib/"
+		lib_str = absolute_prepend + JavaProcess.config.javaLib_loc
 	
 		for lib in JavaProcess.config.java_libs:
 			cp = cp + ":" + lib_str + lib + "/*"
@@ -104,7 +104,11 @@ class JavaProcessConfig(config_help.Config):
 			"reflections"
 			], 
 		'ggpBaseInstall_loc' : 
-			"/Users/gsj601/git/ggp-hardware.git/"
+			"/Users/gsj601/git/ggp-hardware.git/",
+		'javaBin_loc' :
+			"build/classes/main/",
+		'javaLib_loc' :
+			"lib/"
 		}
 
 

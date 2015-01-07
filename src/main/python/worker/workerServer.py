@@ -28,7 +28,7 @@ class WorkerServer(object):
 	
 	def __init__(self, config):
 		"""WorkerServer.__init__: sets address of us and of dispatcher."""
-		WorkerServer.config = config
+		WorkerServer.config = WorkerServerConfig.configFrom_dict(config)
 		
 		self._ourPlayerPort = WorkerServer.config.pPort
 		self._ourWorkerPort = WorkerServer.config.wPort

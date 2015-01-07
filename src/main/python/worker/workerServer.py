@@ -3,10 +3,12 @@
 
 import socket
 import json
+import errno
 
 
 
 import ggpPlayerProcess
+import util.config_help
 
 
 
@@ -25,33 +27,19 @@ class WorkerServer(object):
 		information; running a ggp-base player. 
 	"""
 	
-	default_dispatchServerAddress = "localhost"
-	default_dispatchServerPort = 20000
-	
-	default_ourHostname = 'localhost'
-	
-	default_ourPlayerPort = 9147
-	default_ourWorkerPort = 21000
-	
-	def __init__(self, config, pPort=None, wPort=None):
+	def __init__(self, config):
 		"""WorkerServer.__init__: sets address of us and of dispatcher."""
 		self.config = config
+		WorkerServer.config = WorkerServerConfig.configFrom_dict(config)
 		
-		if not pPort == None:
-			self._ourPlayerPort = pPort
-		else:
-			self._ourPlayerPort = WorkerServer.default_ourPlayerPort
+		self._ourPlayerPort = WorkerServer.config.pPort
+		self._ourWorkerPort = WorkerServer.config.wPort
 		
-		if not wPort == None:
-			self._ourWorkerPort = wPort
-		else:
-			self._ourWorkerPort = WorkerServer.default_ourWorkerPort
-		
-		self._ourHostname = WorkerServer.default_ourHostname
+		self._ourHostname = WorkerServer.config.ourHostname
 				
 		self._dispatcher_hp = (
-			WorkerServer.default_dispatchServerAddress, 
-			WorkerServer.default_dispatchServerPort
+			WorkerServer.config.dispatchServerAddress, 
+			WorkerServer.config.dispatchServerPort
 			)
 
 		LOG.debug("WorkerServer constructed, %s, %i, %i", 
@@ -91,32 +79,46 @@ class WorkerServer(object):
 			https://wiki.python.org/moin/TcpCommunication
 		"""
 		LOG.debug("WorkerServer waiting for match to play.")
-		try:
-			# The wait half:
-			our_hp = (self._ourHostname, self._ourWorkerPort)
-			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			s.settimeout(10)
-			s.bind(our_hp)
-			s.listen(1)
-			conn, addr = s.accept()
-			LOG.debug("WorkerServer received match connection.")
-			data = json.loads(conn.recv(100000).strip())
-			conn.close()
 		
-			# The play half:
-			port, playerType = (self._ourPlayerPort, data["playerType"])
-			player = ggpPlayerProcess.GGPPlayerProcess(
-				self.config, port, playerType)
-			LOG.debug("WorkerServer starting player %s, %i", 
-					playerType, port)
-			player.run()
-		except socket.timeout as e:
-			LOG.info("Shutting down WorkerServer after not hearing about a game.")
-			self.running = False
-		except Exception as e:
-			LOG.warn("Other problem with waiting for match to play.")
-			LOG.warn(e.message)
-			
+		connected = False
+		while (not connected) and self.running:
+			try:
+				# The wait half:
+				our_hp = (self._ourHostname, self._ourWorkerPort)
+				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				s.settimeout(20)
+				s.bind(our_hp)
+				s.listen(1)
+				conn, addr = s.accept()
+				LOG.debug("WorkerServer received match connection.")
+				data = json.loads(conn.recv(100000).strip())
+				conn.close()
+				LOG.debug("WorkerServer read match details.")
+				connected = True
+			except socket.timeout as e:
+				LOG.info("Shutting down WorkerServer after not hearing about a game.")
+				self.running = False
+				return 
+			except Exception as e:
+				if e.errno == errno.EAGAIN:
+					LOG.warn(
+						"WorkerServer couldn't start server " + 
+						" o listen for match.  Trying again."
+						)
+				else:
+					LOG.warn("Other problem with waiting for match to play.")
+					LOG.warn(e)
+					self.running = False
+					return
+		
+		# The play half:
+		LOG.debug("WorkerServer is setting up player.")
+		port, playerType = (self._ourPlayerPort, data["playerType"])
+		player = ggpPlayerProcess.GGPPlayerProcess(
+			self.config, port, playerType)
+		LOG.debug("WorkerServer starting player %s, %i", 
+				playerType, port)
+		player.run()
 		
 		
 	
@@ -130,4 +132,18 @@ class WorkerServer(object):
 			# play that game. 
 			self.wait_and_play()
 		
+class WorkerServerConfig(util.config_help.Config):
 	
+	for_classname = "WorkerServer"
+	
+	defaults = {
+		'pPort' : 9147,
+		'wPort' : 21000,
+		'ourHostname' :'localhost',
+		'dispatchServerAddress' : 'localhost',
+		'dispatchServerPort' : 20000
+		}
+
+
+
+

@@ -100,10 +100,12 @@ class WorkerServer(object):
 				self.running = False
 				return 
 			except Exception as e:
-				if e.errno == errno.EAGAIN:
+				n = e.errno
+				allowable = [errno.EAGAIN, errno.EADDRINUSE]
+				if n in allowable:
 					LOG.warn(
 						"WorkerServer couldn't start server " + 
-						" o listen for match.  Trying again."
+						"to listen for match.  Trying again."
 						)
 				else:
 					LOG.warn("Other problem with waiting for match to play.")

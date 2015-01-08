@@ -1,0 +1,16 @@
+[
+{	"tourneyName": "testing", 
+	"startClock": 60, 
+	"playClock": 30, 
+	"gameKey": "ticTacToe", 
+	"numPlayers": 2, 
+	"playerTypes": ["RandomGamer", "RandomGamer"]
+}, 
+{	"tourneyName": "testing", 
+	"startClock": 60, 
+	"playClock": 30, 
+	"gameKey": "ticTacToe",
+	"numPlayers": 2, 
+	"playerTypes": ["RandomGamer", "RandomGamer"]
+}
+]

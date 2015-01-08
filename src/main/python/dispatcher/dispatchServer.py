@@ -319,10 +319,11 @@ class Match(object):
 			(hostname, port) = playerHost.get_player_tuple()
 			self._ggpPlayer.add_host(hostname, hostname, port)
 		
-		LOG.debug("Match of %s will be run in 10s...", self.gameKey)
+		LOG.info("Match of %s will be run in 10s...", self.gameKey)
 		time.sleep(10)
 		self._ggpPlayer.run()
-		LOG.info("Match finished: %s", self.to_dict())
+		LOG.info("Match finished")
+		LOG.debug("Match finished was %s", self.to_dict())
 			
 
 

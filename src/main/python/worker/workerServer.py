@@ -1,8 +1,10 @@
 
 
 # Standard imports
+import os
 import socket
 import json
+import time
 import errno
 
 
@@ -108,6 +110,16 @@ class WorkerServer(object):
 						"WorkerServer couldn't start server " + 
 						"to listen for match.  Trying again."
 						)
+					LOG.debug(
+						"WorkerServer error message was " + 
+						os.strerror(n)
+						)
+					s = 10
+					LOG.debug(
+						"WorkerServer will wait " + str(s) + "s before " + 
+						"trying to listen for match again."
+						)
+					time.sleep(s)
 				else:
 					LOG.warn("Other problem with waiting for match to play.")
 					LOG.warn(e)

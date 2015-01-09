@@ -14,17 +14,6 @@ import logging.config
 logging.config.fileConfig("logging.w.conf",disable_existing_loggers=False)
 
 
-class RunWorkerConfig(util.config_help.Config):
-	
-	for_classname = "RunWorker"
-	
-	defaults = {
-		'pPort' : 9147,
-		'wPort' : 21000
-		}
-	
-
-
 parser = optparse.OptionParser()
 parser.add_option("-d", "--debug",
 		dest="debug",

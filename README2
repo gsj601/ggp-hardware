@@ -1,0 +1,17 @@
+README2 (i.e., for ggp-hardware instead of ggp-base)
+
+Steps to take on the dispatch server:
+1. At install root, run ./gradlew assemble
+2. At src/main/python, mkdir with the name of the "tourney"
+3. Reset the ggpBaseInstall_loc in system config file. 
+4. Reset the DispatchServer/ourHostname in system config file. 
+5. Choose the DispatchServer/experimentFileLoc to match current experiment file.
+
+Steps to take on the worker servers:
+1. At install root, run ./gradlew assemble
+2. At src/main/python, mkdir with the name of the "tourney"
+3. Reset the ggpBaseInstall_loc in system config file. 
+4. Set the WorkerServer/ourHostname, dispatchServerAddress, and 
+   dispatchServerPort 
+
+

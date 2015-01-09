@@ -1,5 +1,6 @@
 
 
+# Standard imports
 import json
 import logging
 
@@ -7,7 +8,21 @@ import logging
 
 
 class Config(object):
-	"""Partially inspired by:
+	"""Config class: to extend; methods converting dict to fields. 
+		It's essentially a set of useful methods for taking values from a dict 
+		and using them to build a class with names.  The process assumes that 
+		there is a set of default field values to be set from the start, and 
+		then replaced by values from a dict (or, eventually a file or other 
+		sources).  
+		To use the Config model, for each class that uses the model, a new 
+		class should override the Config class.  The class has two fields that 
+		should then be overriden: 
+			- for_classname, a string with the name of the class being 
+			  configured, so that the class's configuration can be read from a 
+			  dict with many 
+			- defaults, which a dictionary matching fields with their default 
+			  values.  
+		Partially inspired by:
 		http://www.infoq.com/articles/5-config-mgmt-best-practices
 	"""
 	
@@ -19,7 +34,13 @@ class Config(object):
 	
 	@classmethod
 	def configFrom_dict(cls, d):
-		"""Config object built with defaults, but overriden from dict"""
+		"""Config object built with defaults, but overriden from dict.
+			The dict should be structured as follows: 
+				{ C1 : {f1:v1, f2:v2, f3:v3}, C2 : {...}, ... }
+			where C1 and C2 are classes that can be configured whose names match
+			a for_classname field in the subclass of Config, and (f1,v1) are 
+			fieldnames and values of the configuration.  
+		"""
 		c = cls()
 		specific_config = {}
 		try:

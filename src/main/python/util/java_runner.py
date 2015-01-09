@@ -44,10 +44,6 @@ class JavaProcess(object):
 		LOG.debug("JavaProcess constructed for %s", self.class_loc)
 		return
 	
-	@classmethod
-	def set_config(cls, config):
-		cls.config = config
-	
 	def run(self):
 		"""JavaProcess.run(self):
 			Runs the external Java process.  

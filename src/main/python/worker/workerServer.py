@@ -1,12 +1,12 @@
 
 
-
+# Standard imports
 import socket
 import json
 import errno
 
 
-
+# Local imports
 import ggpPlayerProcess
 import util.config_help
 
@@ -74,9 +74,10 @@ class WorkerServer(object):
 		"""WorkerServer.wait_and_play: wait for notification of match 
 			We want the information needed to start up a GGPPlayerProcess:
 				- what player type to play as
-				- what port to run on, that game will run on.
-		This non-server listening code taken from:
-			https://wiki.python.org/moin/TcpCommunication
+			(The other piece of info is what port for the player to communicate
+			on, but that, we sent to the dispatcher ourselves.)
+			The non-server listening code was taken from:
+				https://wiki.python.org/moin/TcpCommunication
 		"""
 		LOG.info("WorkerServer waiting for match to play.")
 		
@@ -123,11 +124,10 @@ class WorkerServer(object):
 		player.run()
 		LOG.info("Player has run.")
 		
-		
-		
-	
 	def run(self):
-		"""WorkerServer.run(): just loops: announcing ready, wait to play."""
+		"""WorkerServer.run(): just loops: announcing ready, wait to play.
+			Loops as long as self.running is True, in case of error. 
+		"""
 		self.running = True
 		while self.running:
 			# Tell the dispatcher we're ready to play a game.  

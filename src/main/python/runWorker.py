@@ -7,6 +7,7 @@ import util.config_help
 # Library imports
 import optparse
 import json
+import sys
 
 # Set up logging
 import logging
@@ -14,6 +15,8 @@ import logging.config
 logging.config.fileConfig("logging.w.conf",disable_existing_loggers=False)
 
 
+
+# Parse the command-line options. 
 parser = optparse.OptionParser()
 parser.add_option("-d", "--debug",
 		dest="debug",
@@ -33,29 +36,9 @@ parser.add_option("-j", "--json-config-file",
 		)
 (options, args) = parser.parse_args()
 
-config = {}
-try:
-	f = open(options.json_config_file)
-	config = json.load(f)
-except IOError as e:
-	if options.json_config_file != default_config_file:
-		logging.getLogger("worker").error(
-			"Couldn't find non-default config file."
-			)
-		logging.getLogger("worker").error(e.message)
-	else:
-		logging.getLogger("worker").debug(
-			"Couldn't find default config file, ignoring."
-			)
-workerServerConfig = worker.workerServer.WorkerServerConfig.configFrom_dict(
-	config
-	)
 
-# Change the file location for this worker, now that we know the port.
-util.logging_help.set_fileHandler_file(
-		logging.getLogger(),
-		"testing/worker." + str(workerServerConfig.wPort) + ".log")
 
+# Set the logging level based on options. 
 if options.debug:
 	util.logging_help.set_streamHandler_levels(
 			logging.getLogger(),
@@ -72,6 +55,41 @@ else:
 
 
 
+# Check the config file. 
+config = {}
+try:
+	f = open(options.json_config_file)
+	config = json.load(f)
+except IOError as e:
+	# If we couldn't open the config file, 
+	# either it was non-default so it should really be there, 
+	# so throw some errors and exit, 
+	# or it was only the default config file, but we couldn't open it, 
+	# but who cares?  
+	if options.json_config_file != default_config_file:
+		logging.getLogger("worker").error(
+			"Couldn't find non-default config file."
+			)
+		logging.getLogger("worker").error(e.message)
+		sys.exit("Couldn't find non-default config file. " + str(e.message))
+	else:
+		logging.getLogger("worker").debug(
+			"Couldn't find default config file, ignoring."
+			)
+workerServerConfig = worker.workerServer.WorkerServerConfig.configFrom_dict(
+	config
+	)
+
+
+
+
+# Change the file location for this worker, now that we know the port.
+util.logging_help.set_fileHandler_file(
+		logging.getLogger(),
+		"testing/worker." + str(workerServerConfig.wPort) + ".log")
+
+
+# Start the server. 
 ws = worker.workerServer.WorkerServer(config)
 ws.run()
 

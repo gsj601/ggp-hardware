@@ -12,6 +12,10 @@ import logging
 import logging.config
 logging.config.fileConfig("logging.d.conf",disable_existing_loggers=False)
 
+
+
+
+# Parse the command-line options. 
 parser = optparse.OptionParser()
 parser.add_option("-r", "--random",
 		dest="random",
@@ -37,6 +41,7 @@ parser.add_option("-j", "--json-config-file",
 (options, args) = parser.parse_args()
 
 
+# Set the logging level based on options. 
 if options.debug:
 	util.logging_help.set_streamHandler_levels(
 			logging.getLogger(),
@@ -51,6 +56,9 @@ else:
 			logging.getLogger(),
 			logging.WARN)
 
+
+
+# Check the config file. 
 config = {}
 try:
 	f = open(options.json_config_file)
@@ -67,6 +75,7 @@ except IOError as e:
 			)
 
 
+# Start the server. 
 ds = dispatcher.dispatchServer.DispatchServer(config, options.random)
 ds.run()
 

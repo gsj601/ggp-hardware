@@ -13,7 +13,7 @@ random.seed()
 
 # Local imports
 import ggpServerProcess
-
+import util.config_help
 
 # Setting up logging:
 # https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
@@ -319,10 +319,11 @@ class Match(object):
 			(hostname, port) = playerHost.get_player_tuple()
 			self._ggpPlayer.add_host(hostname, hostname, port)
 		
-		LOG.debug("Match of %s will be run in 10s...", self.gameKey)
+		LOG.info("Match of %s will be run in 10s...", self.gameKey)
 		time.sleep(10)
 		self._ggpPlayer.run()
-		LOG.info("Match finished: %s", self.to_dict())
+		LOG.info("Match finished")
+		LOG.debug("Match finished was %s", self.to_dict())
 			
 
 
@@ -338,36 +339,27 @@ class Match(object):
 class DispatchServer(object):
 	"""DispatchServer: runs; listens for workers; picks games to play."""
 	
-	# These should be externalized with a config file instead of used.
-	default_ourHostname = 'localhost'
-	default_ourDispatchPort = 20000
-	
-	default_tourneyName = "testing"
-	
-	default_experimentFileLoc = "matches.expr"
-	
-	
-	
 	def __init__(self, config, random):
 		"""DispatchServer.__init__: prepares the server:
 			- builds the TCPServer that will listen for ready workers
 			- preps other info like our tourney name, our hostname, etc.
 		"""
 		self.config = config
+		DispatchServer.config = DispatchServerConfig.configFrom_dict(config)
 		
 		self._run_random = random
 		
-		self._ourHostname = DispatchServer.default_ourHostname
-		self._ourDispatchPort = DispatchServer.default_ourDispatchPort
+		self._ourHostname = DispatchServer.config.ourHostname
+		self._ourDispatchPort = DispatchServer.config.ourDispatchPort
 		
 		h_p = (self._ourHostname, self._ourDispatchPort)
 		self._readyWorkerServer = SocketServer.ThreadingTCPServer(
 			h_p, ReadyWorkerHandler)
 		
-		self._tourneyName = DispatchServer.default_tourneyName
+		self._tourneyName = DispatchServer.config.tourneyName
 		LOG.debug("Dispatch Server constructed.")
 		
-		experimentFile_loc = DispatchServer.default_experimentFileLoc
+		experimentFile_loc = DispatchServer.config.experimentFileLoc
 		self.experimentFile = None
 		try:
 			self.experimentFile = open(experimentFile_loc)
@@ -427,7 +419,16 @@ class DispatchServer(object):
 				
 				
 		
+class DispatchServerConfig(util.config_help.Config):
+	
+	for_classname = "DispatchServer"
 
+	defaults = {
+		'ourHostname' : 'localhost',
+		'ourDispatchPort' : 20000,
+		'tourneyName' : 'testing',
+		'experimentFileLoc' : 'matches.expr'
+		}
 
 
 

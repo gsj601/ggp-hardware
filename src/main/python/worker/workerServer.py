@@ -78,7 +78,7 @@ class WorkerServer(object):
 		This non-server listening code taken from:
 			https://wiki.python.org/moin/TcpCommunication
 		"""
-		LOG.debug("WorkerServer waiting for match to play.")
+		LOG.info("WorkerServer waiting for match to play.")
 		
 		connected = False
 		while (not connected) and self.running:
@@ -118,9 +118,11 @@ class WorkerServer(object):
 		port, playerType = (self._ourPlayerPort, data["playerType"])
 		player = ggpPlayerProcess.GGPPlayerProcess(
 			self.config, port, playerType)
-		LOG.debug("WorkerServer starting player %s, %i", 
+		LOG.info("WorkerServer starting player %s, %i", 
 				playerType, port)
 		player.run()
+		LOG.info("Player has run.")
+		
 		
 		
 	

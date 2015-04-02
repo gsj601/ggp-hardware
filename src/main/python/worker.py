@@ -9,7 +9,7 @@ import errno
 
 
 # Local imports
-import ggpPlayerProcess
+import processes.ggpPlayerProcess
 import util.config_help
 
 
@@ -129,7 +129,7 @@ class WorkerServer(object):
         # The play half:
         LOG.debug("WorkerServer is setting up player.")
         port, playerType = (self._ourPlayerPort, data["playerType"])
-        player = ggpPlayerProcess.GGPPlayerProcess(
+        player = processes.ggpPlayerProcess.GGPPlayerProcess(
             self.config, port, playerType)
         LOG.info("WorkerServer starting player %s, %i", 
                 playerType, port)

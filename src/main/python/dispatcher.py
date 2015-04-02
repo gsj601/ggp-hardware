@@ -12,7 +12,7 @@ import threading
 random.seed()
 
 # Local imports
-import ggpServerProcess
+import processes.ggpServerProcess
 import util.config_help
 
 # Setting up logging:
@@ -308,7 +308,7 @@ class Match(object):
         """
         LOG.debug("Match of %s is starting", self.gameKey)
         self._announceGame()
-        self._ggpPlayer = ggpServerProcess.GGPServerProcess(
+        self._ggpPlayer = processes.ggpServerProcess.GGPServerProcess(
             self.config,
             self.tourneyName, 
             self.gameKey,

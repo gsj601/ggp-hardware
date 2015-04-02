@@ -11,6 +11,7 @@ import errno
 # Local imports
 import processes.ggpPlayerProcess
 import util.config_help
+import networking.working
 
 
 
@@ -47,30 +48,16 @@ class WorkerServer(object):
         LOG.debug("WorkerServer constructed, %s, %i, %i", 
                 self._ourHostname, self._ourWorkerPort, self._ourPlayerPort)
     
-    def announce_ready(self):
-        """WorkerServer.announce_ready(): tell dispatcher we're ready to play, 
-            by sending them a json object of our hostname and port.
-        """
-        configuration = {
-            "hostname": self._ourHostname,
-            "pPort": self._ourPlayerPort,
-            "wPort": self._ourWorkerPort
-            }
-        LOG.debug("WorkerServer announcing ready with %s", 
-                configuration)
-        
-        try:
-            to_send = json.dumps(configuration)
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(self._dispatcher_hp)
-            LOG.debug("WorkerServer ready announce connected.")
-            s.send(to_send)
-            LOG.debug("WorkerServer ready announce sent.")
-            s.close()
-        except socket.error as e:
-            LOG.info(
-                "Shutting down WorkerServer because no DispatchServer found.")
-            self.running = False
+    def do_announce_ready(self):
+        if self.running:
+            # Tell the dispatcher we're ready to play a game.  
+            rs = network.working.WorkerAnnounceReadyServer(
+                LOG, 
+                self._dispatcher_hp,
+                self._ourHostname, self._ourPlayerPort, self._ourWorkerPort
+                )
+            rs.run()
+            self.running = rs.successful
     
     def wait_and_play(self):
         """WorkerServer.wait_and_play: wait for notification of match 
@@ -142,8 +129,8 @@ class WorkerServer(object):
         """
         self.running = True
         while self.running:
-            # Tell the dispatcher we're ready to play a game.  
-            self.announce_ready()
+            # Tell the dispatcher we're ready to play a game.
+            self.do_announce_ready()
             # Then wait to hear about what playerType to play as, and 
             # play that game. 
             self.wait_and_play()

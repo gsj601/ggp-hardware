@@ -10,7 +10,7 @@ import json
 # Setup logging
 import logging
 import logging.config
-logging.config.fileConfig("logging.d.conf",disable_existing_loggers=False)
+logging.config.fileConfig("config/logging.d.conf",disable_existing_loggers=False)
 
 
 
@@ -32,7 +32,7 @@ parser.add_option("-v", "--verbose",
         help="Turn logging level to VERBOSE.",
         action="store_true"
         )
-default_config_file = "system.conf"
+default_config_file = "config/system.conf"
 parser.add_option("-j", "--json-config-file",
         dest="json_config_file",
         help="What JSON-formatted config file to read.",

@@ -1,6 +1,6 @@
 
 # Local imports
-import worker.workerServer
+import worker
 import util.logging_help
 import util.config_help
 
@@ -76,7 +76,7 @@ except IOError as e:
         logging.getLogger("worker").debug(
             "Couldn't find default config file, ignoring."
             )
-workerServerConfig = worker.workerServer.WorkerServerConfig.configFrom_dict(
+workerServerConfig = worker.WorkerServerConfig.configFrom_dict(
     config
     )
 
@@ -90,6 +90,6 @@ util.logging_help.set_fileHandler_file(
 
 
 # Start the server. 
-ws = worker.workerServer.WorkerServer(config)
+ws = worker.WorkerServer(config)
 ws.run()
 

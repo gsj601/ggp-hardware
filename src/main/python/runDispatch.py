@@ -1,7 +1,7 @@
 
 # Local imports
 import util.logging_help
-import dispatcher.dispatchServer
+import dispatcher
 
 # Library imports
 import optparse
@@ -76,7 +76,7 @@ except IOError as e:
 
 
 # Start the server. 
-ds = dispatcher.dispatchServer.DispatchServer(config, options.random)
+ds = dispatcher.DispatchServer(config, options.random)
 ds.run()
 
 

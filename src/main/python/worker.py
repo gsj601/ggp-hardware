@@ -52,29 +52,29 @@ class WorkerServer(object):
     def do_announce_ready(self):
         if self.running:
             # Tell the dispatcher we're ready to play a game.  
-            rs = NET.WorkerAnnounceReadyServer(
+            wars = NET.WorkerAnnounceReadyServer(
                 LOG, 
                 self._dispatcher_hp,
                 self._ourHostname, self._ourPlayerPort, self._ourWorkerPort
                 )
-            rs.run()
-            self.running = rs.finished() and rs.successful()
+            wars.run()
+            self.running = wars.finished() and wars.successful()
     
     def do_wait(self):
         data = None
         while self.running and data == None:
             # The wait half:
-            wgmp = NET.WorkerGetMatchParamsServer(LOG)
+            wgmps = NET.WorkerGetMatchParamsServer(LOG)
             try:
-                wgmp.run()
+                wgmps.run()
             except NET.WorkerGetMatchParamsServerAllowableError as e:
                 LOG.debug(e)
                 time.sleep(5)
             except Exception as e:
                 LOG.warn(e)
                 self.running = False
-            if wgmp.finished() and wgmp.successful():
-                data = wgmp.response()
+            if wgmps.finished() and wgmps.successful():
+                data = wgmps.response()
         return data
     
     def do_play(self, data):

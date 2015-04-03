@@ -5,13 +5,12 @@ import os
 import socket
 import json
 import time
-import errno
 
 
 # Local imports
 import processes.ggpPlayerProcess
 import util.config_help
-import networking.working
+import networking.working as NET
 
 
 
@@ -47,27 +46,39 @@ class WorkerServer(object):
 
         LOG.debug("WorkerServer constructed, %s, %i, %i", 
                 self._ourHostname, self._ourWorkerPort, self._ourPlayerPort)
+        
+        self.running = None
     
     def do_announce_ready(self):
         if self.running:
             # Tell the dispatcher we're ready to play a game.  
-            rs = network.working.WorkerAnnounceReadyServer(
+            rs = NET.WorkerAnnounceReadyServer(
                 LOG, 
                 self._dispatcher_hp,
                 self._ourHostname, self._ourPlayerPort, self._ourWorkerPort
                 )
             rs.run()
-            self.running = rw.finished and rs.successful
+            self.running = rs.finished() and rs.successful()
     
-    def do_wait_and_play(self):
-        if self.running:
+    def do_wait(self):
+        data = None
+        while self.running and data == None:
             # The wait half:
-            wap = networking.working.WorkerWaitAndPlayServer(
-                LOG,
-                )
-            wap.run()
-            self.running = wap.finished and wap.successful
-        
+            wgmp = NET.WorkerGetMatchParamsServer(LOG)
+            try:
+                wgmp.run()
+            except NET.WorkerGetMatchParamsServerAllowableError as e:
+                LOG.debug(e)
+                time.sleep(5)
+            except Exception as e:
+                LOG.warn(e)
+                self.running = False
+            if wgmp.finished() and wgmp.successful():
+                data = wgmp.response()
+        return data
+    
+    def do_play(self, data):
+        if self.running:
             # The play half:
             LOG.debug("WorkerServer is setting up player.")
             port, playerType = (self._ourPlayerPort, data["playerType"])
@@ -77,7 +88,7 @@ class WorkerServer(object):
                     playerType, port)
             player.run()
             LOG.info("Player has run.")
-        
+    
     def run(self):
         """WorkerServer.run(): just loops: announcing ready, wait to play.
             Loops as long as self.running is True, in case of error. 
@@ -86,10 +97,11 @@ class WorkerServer(object):
         while self.running:
             # Tell the dispatcher we're ready to play a game.
             self.do_announce_ready()
-            # Then wait to hear about what playerType to play as, and 
-            # play that game. 
-            self.do_wait_and_play()
-        
+            # Then wait to hear about what playerType to play as.
+            data = self.do_wait()
+            # Then play that game. 
+            self.do_play(data)
+    
 class WorkerServerConfig(util.config_help.Config):
     
     for_classname = "WorkerServer"

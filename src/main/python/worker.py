@@ -57,7 +57,7 @@ class WorkerServer(object):
                 self._ourHostname, self._ourPlayerPort, self._ourWorkerPort
                 )
             rs.run()
-            self.running = rs.successful
+            self.running = rw.finished and rs.successful
     
     def do_wait_and_play(self):
         if self.running:

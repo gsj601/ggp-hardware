@@ -50,8 +50,6 @@ class WorkerAnnounceReadyServer(server.Server):
             self._logger.info(
                 "Shutting down WorkerServer because no DispatchServer found.")
             self._set_unsuccessful()
-        finally:
-            self._set_finished()
         
         
 

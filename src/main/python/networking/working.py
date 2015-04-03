@@ -58,4 +58,65 @@ class WorkerAnnounceReadyServer(server.Server):
 
 
 
+class WorkerWaitAndPlayServer(server.ReceivingServer):
+    
+    def __init__(self, logger):
+        self._logger= logger
+        
+    
+    def run(self):
+        """WorkerWaitAndPlayServer.run: wait for notification of match 
+            We want the information needed to start up a GGPPlayerProcess:
+                - what player type to play as
+            (The other piece of info is what port for the player to communicate
+            on, but that, we sent to the dispatcher ourselves.)
+            The non-server listening code was taken from:
+                https://wiki.python.org/moin/TcpCommunication
+        """
+        self._logger.info("WorkerServer waiting for match to play.")
+        
+        connected = False
+        while (not connected) and not self.finished():
+            try:
+                our_hp = (self._ourHostname, self._ourWorkerPort)
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(20)
+                s.bind(our_hp)
+                s.listen(1)
+                conn, addr = s.accept()
+                self._logger.debug("WorkerServer received match connection.")
+                data = json.loads(conn.recv(100000).strip())
+                conn.close()
+                self._logger.debug("WorkerServer read match details.")
+                connected = True
+                self._set_response(data)
+            except socket.timeout as e:
+                self._logger.info("Shutting down WorkerServer after not hearing about a game.")
+                self._set_unsuccessful()
+            except Exception as e:
+                n = e.errno
+                allowable = [errno.EAGAIN, errno.EADDRINUSE]
+                if n in allowable:
+                    self._logger.warn(
+                        "WorkerServer couldn't start server " + 
+                        "to listen for match.  Trying again."
+                        )
+                    self._logger.debug(
+                        "WorkerServer error message was " + 
+                        os.strerror(n)
+                        )
+                    s = 10
+                    self._logger.debug(
+                        "WorkerServer will wait " + str(s) + "s before " + 
+                        "trying to listen for match again."
+                        )
+                    time.sleep(s)
+                else:
+                    self._logger.warn("Other problem with waiting for match to play.")
+                    self._logger.warn(e)
+                    self._set_unsuccessful()
+        
+        
+
+
 

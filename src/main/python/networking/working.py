@@ -3,6 +3,7 @@
 # Library imports
 import json
 import socket
+import errno
 
 # Local imports
 import server
@@ -56,14 +57,15 @@ class WorkerAnnounceReadyServer(server.Server):
 
 
 
-class WorkerWaitAndPlayServer(server.ReceivingServer):
+class WorkerGetMatchParamsServer(server.ReceivingServer):
     
-    def __init__(self, logger):
+    def __init__(self, logger, timeout=20):
         self._logger= logger
+        self._timeout = timeout
         
     
     def run(self):
-        """WorkerWaitAndPlayServer.run: wait for notification of match 
+        """WorkerGetMatchParamsServer.run: wait for notification of match 
             We want the information needed to start up a GGPPlayerProcess:
                 - what player type to play as
             (The other piece of info is what port for the player to communicate
@@ -73,48 +75,58 @@ class WorkerWaitAndPlayServer(server.ReceivingServer):
         """
         self._logger.info("WorkerServer waiting for match to play.")
         
-        connected = False
-        while (not connected) and not self.finished():
-            try:
-                our_hp = (self._ourHostname, self._ourWorkerPort)
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(20)
-                s.bind(our_hp)
-                s.listen(1)
-                conn, addr = s.accept()
-                self._logger.debug("WorkerServer received match connection.")
-                data = json.loads(conn.recv(100000).strip())
-                conn.close()
-                self._logger.debug("WorkerServer read match details.")
-                connected = True
-                self._set_response(data)
-            except socket.timeout as e:
-                self._logger.info("Shutting down WorkerServer after not hearing about a game.")
-                self._set_unsuccessful()
-            except Exception as e:
-                n = e.errno
-                allowable = [errno.EAGAIN, errno.EADDRINUSE]
-                if n in allowable:
-                    self._logger.warn(
-                        "WorkerServer couldn't start server " + 
-                        "to listen for match.  Trying again."
-                        )
-                    self._logger.debug(
-                        "WorkerServer error message was " + 
-                        os.strerror(n)
-                        )
-                    s = 10
-                    self._logger.debug(
-                        "WorkerServer will wait " + str(s) + "s before " + 
-                        "trying to listen for match again."
-                        )
-                    time.sleep(s)
-                else:
-                    self._logger.warn("Other problem with waiting for match to play.")
-                    self._logger.warn(e)
-                    self._set_unsuccessful()
-        
-        
+        our_hp = (self._ourHostname, self._ourWorkerPort)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.settimeout(self._timeout)
+            s.bind(our_hp)
+            s.listen(1)
+            conn, addr = s.accept()
+            self._logger.debug("WorkerServer received match connection.")
+            data = json.loads(conn.recv(100000).strip())
+            conn.close()
+            self._logger.debug("WorkerServer read match details.")
+            connected = True
+            self._set_response(data)
+        except socket.timeout as e:
+            #self._logger.info("Shutting down WorkerServer after not hearing about a game.")
+            self._set_unsuccessful()
+        except Exception as e:
+            error_number = e.errno
+            self._set_unsuccessful()
+            if error_number == errno.EADDRINUSE:
+                raise WorkerGetMatchParamsServerAddressInUseError(address_tuple)
+            elif error_number == errno.EAGAIN:
+                raise WorkerGetMatchParamsServerTryAgainError()
+            else:
+                raise exception
+        finally:
+            s.close()
+    
+    
+
+
+
+class WorkerGetMatchParamsServerAllowableError(Exception):
+    pass
+
+
+class WorkerGetMatchParamsServerAddressInUseError(
+            WorkerGetMatchParamsServerAllowableError):
+    
+    def __init__(self, address_tuple):
+        self.msg = "Worker could not wait for match details at " + \
+            str(address_tuple)
+
+
+class WorkerGetMatchParamsServerTryAgainError(
+            WorkerGetMatchParamsServerAllowableError):
+    
+    def __init__(self):
+        self.msg = "Told to try again while waiting for match details."
+
+
+
 
 
 

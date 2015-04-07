@@ -43,81 +43,10 @@ class WorkerServer(object):
             WorkerServer.config.dispatchServerAddress, 
             WorkerServer.config.dispatchServerPort
             )
-
+            
         LOG.debug("WorkerServer constructed, %s, %i, %i", 
                 self._ourHostname, self._ourWorkerPort, self._ourPlayerPort)
         
-        self._announce_max = 5
-        self._announce_sleep = 5
-        self._wait_max = 1
-        self._wait_sleep = 5
-        
-    
-    def is_running(self):
-        return self._state > 0
-    
-    def start(self):
-        self._state = 1
-        
-        self._announce_count = 0
-        self._wait_count = 0
-        
-    def _set_announcing(self):
-        self._state = 1
-        self._announce_count = 0
-        
-    def _set_waiting(self):
-        self._state = 2
-        self._wait_count = 0
-    
-    def _set_playing(self):
-        self._state = 3
-    
-    def _set_finished(self):
-        self._state = 0
-    
-    def is_announcing(self):
-        return self._state == 1
-    
-    def is_waiting(self):
-        return self._state == 2
-    
-    def is_playing(self):
-        return self._state == 3
-    
-    def _announce_worked(self):
-        self._set_waiting()
-    
-    def _announce_failed(self):
-        if self._announce_count == self._announce_max:
-            LOG.info("WorkerServer announced ready " + \
-                str(self._announce_max) + " times, giving up.")
-            self._set_finished()
-        else:
-            LOG.debug("WorkerServer could not announce ready, waiting for " + \
-                str(self._announce_sleep) + "s.")
-            self._announce_count += 1
-            time.sleep(self._announce_sleep)
-    
-    def _wait_worked(self):
-        self._set_playing()
-    
-    def _wait_failed(self):
-        if self._wait_count == self._wait_max:
-            LOG.info("WorkerServer waited for match details " + \
-                str(self._wait_max) + " times, announcing ready again.")
-            self._set_announcing()
-        else:
-            LOG.debug("WorkerServer could not get match details, waiting " + \
-                "for " + str(self._wait_sleep) + "s.")
-            self._wait_count += 1
-            time.sleep(self._wait_sleep)
-    
-    def _play_worked(self):
-        self._set_announcing()
-    
-    def _play_failed(self):
-        self._set_announcing()
     
     def do_announce_ready(self):
         # Tell the dispatcher we're ready to play a game.  
@@ -159,26 +88,27 @@ class WorkerServer(object):
         """WorkerServer.run(): just loops: announcing ready, wait to play.
             Loops as long as self.running is True, in case of error. 
         """
-        self.start()
-        while self.is_running():
+        state = WorkerServerState()
+        
+        while state.is_running():
             # Tell the dispatcher we're ready to play a game.
-            if self.is_announcing():
+            if state.is_announcing():
                 success = self.do_announce_ready()
                 if success:
-                    self._announce_worked()
+                    state.announce_worked()
                 else:
-                    self._announce_failed()
+                    state.announce_failed()
             # Then wait to hear about what playerType to play as.
-            elif self.is_waiting():
+            elif state.is_waiting():
                 data = self.do_wait()
                 if data == None:
-                    self._wait_failed()
+                    state.wait_failed()
                 else:
-                    self._wait_worked()
+                    state.wait_worked()
             # Then play that game. 
-            elif self.is_playing():
+            elif state.is_playing():
                 self.do_play(data)
-                self._play_worked()
+                state.play_worked()
             # Otherwise, error:
             else:
                 raise WorkerServerInvalidStateError()
@@ -192,7 +122,11 @@ class WorkerServerConfig(util.config_help.Config):
         'wPort' : 21000,
         'ourHostname' :'localhost',
         'dispatchServerAddress' : 'localhost',
-        'dispatchServerPort' : 20000
+        'dispatchServerPort' : 20000,
+        'announce_max' : 5,
+        'announce_sleep' : 5,
+        'wait_max' : 1,
+        'wait_sleep' : 5
         }
 
 
@@ -202,4 +136,93 @@ class WorkerServerInvalidStateError(RuntimeError):
     def __init__(self):
         RuntimeError.__init__(self, "WorkerServer wound up in invalid state.")
 
+
+
+
+class WorkerServerState(object):
+    
+    
+    def __init__(self):
+        self._announce_max = WorkerServer.config.announce_max
+        self._announce_sleep = WorkerServer.config.announce_sleep
+        self._wait_max = WorkerServer.config.wait_max
+        self._wait_sleep = WorkerServer.config.wait_sleep
+        
+        self._set_initial_state()
+    
+    state_finished = 0
+    state_announce = 1
+    state_wait = 2
+    state_play = 3
+    
+    def _set_initial_state(self):
+        self._set_announcing()
+    
+    def is_running(self):
+        return not self._state == WorkerServerState.state_finished
+    
+    def start(self):
+        self._state = WorkerServerState.state_announce
+        
+        self._announce_count = 0
+        self._wait_count = 0
+        
+    def _set_announcing(self):
+        self._state = WorkerServerState.state_announce
+        self._announce_count = 0
+        
+    def _set_waiting(self):
+        self._state = WorkerServerState.state_wait
+        self._wait_count = 0
+    
+    def _set_playing(self):
+        self._state = WorkerServerState.state_play
+    
+    def _set_finished(self):
+        self._state = WorkerServerSTate.state_finished
+    
+    def is_announcing(self):
+        return self._state == 1
+    
+    def is_waiting(self):
+        return self._state == 2
+    
+    def is_playing(self):
+        return self._state == 3
+    
+    def announce_worked(self):
+        self._set_waiting()
+    
+    def announce_failed(self):
+        if self._announce_count == self._announce_max:
+            LOG.info("WorkerServer announced ready " + \
+                str(self._announce_max) + " times, giving up.")
+            self._set_finished()
+        else:
+            LOG.debug("WorkerServer could not announce ready, waiting for " + \
+                str(self._announce_sleep) + "s.")
+            self._announce_count += 1
+            time.sleep(self._announce_sleep)
+    
+    def wait_worked(self):
+        self._set_playing()
+    
+    def wait_failed(self):
+        if self._wait_count == self._wait_max:
+            LOG.info("WorkerServer waited for match details " + \
+                str(self._wait_max) + " times, announcing ready again.")
+            self._set_announcing()
+        else:
+            LOG.debug("WorkerServer could not get match details, waiting " + \
+                "for " + str(self._wait_sleep) + "s.")
+            self._wait_count += 1
+            time.sleep(self._wait_sleep)
+    
+    def play_worked(self):
+        self._set_announcing()
+    
+    def play_failed(self):
+        self._set_announcing()
+    
+    
 

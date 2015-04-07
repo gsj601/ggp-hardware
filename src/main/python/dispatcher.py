@@ -14,6 +14,7 @@ random.seed()
 # Local imports
 import processes.ggpServerProcess
 import util.config_help
+import networking.dispatching as NET
 
 # Setting up logging:
 # https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
@@ -282,24 +283,20 @@ class Match(object):
             LOG.debug("Match of %s is announcing to %s",
                     self.gameKey, configuration)
             playerHost = self._playerHosts[i]
-
-            to_send = json.dumps(configuration)
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            connected = False
-            while not connected:
-                workerTuple = playerHost.get_worker_tuple() 
-                try:
-                    s.connect(workerTuple)
-                    connected = True
-                except socket.error as e:
+            
+            successful = False
+            while not successful:
+                dams = NET.DispatchAnnounceMatchServer(
+                        LOG, configuration, playerHost.get_worker_tuple())
+                dams.run()
+                if not (dams.finished() and dams.successful()):
                     LOG.debug("Couldn't connect to announce game to %s", 
                             workerTuple)
                     time.sleep(1)
-                LOG.debug("Connected to %s to announce game.", 
-                        workerTuple)
-            s.send(to_send)
-            s.close()
-            LOG.debug("Announced to %s successfully.", workerTuple)
+                else:
+                    LOG.debug("Announced game to %s.", 
+                            workerTuple)
+                    successful = True
     
     def playMatch(self):
         """Match.playMatch: public method that handles running an individual

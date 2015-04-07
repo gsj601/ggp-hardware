@@ -95,8 +95,8 @@ class WorkerGetMatchParamsServer(server.ReceivingServer):
             connected = True
             self._set_response(data)
         except socket.timeout as e:
-            #self._logger.info("Shutting down WorkerServer after not hearing about a game.")
             self._set_unsuccessful()
+            raise WorkerGetMatchParamsServerTimeoutError()
         except Exception as e:
             error_number = e.errno
             self._set_unsuccessful()
@@ -105,7 +105,7 @@ class WorkerGetMatchParamsServer(server.ReceivingServer):
             elif error_number == errno.EAGAIN:
                 raise WorkerGetMatchParamsServerTryAgainError()
             else:
-                raise exception
+                raise e
         finally:
             s.close()
     
@@ -136,7 +136,12 @@ class WorkerGetMatchParamsServerTryAgainError(
                 )
 
 
-
-
+class WorkerGetMatchParamsServerTimeoutError(
+            WorkerGetMatchParamsServerAllowableError):
+    
+    def __init__(self):
+        WorkerGetMatchParamsServerAllowableError.__init__(self,
+                "WorkerServer timed out waiting to get match details."
+                )
 
 

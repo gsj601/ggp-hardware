@@ -61,6 +61,8 @@ class WorkerServer(object):
     
     def do_wait(self):
         data = None
+        max_times = 1
+        times = 1
         while self.running and data == None:
             # The wait half:
             wgmps = NET.WorkerGetMatchParamsServer(
@@ -68,6 +70,7 @@ class WorkerServer(object):
                 )
             try:
                 wgmps.run()
+                LOG.debug("WorkerServer got match to play.")
             except NET.WorkerGetMatchParamsServerAllowableError as e:
                 LOG.debug(e)
                 time.sleep(5)
@@ -76,6 +79,12 @@ class WorkerServer(object):
                 self.running = False
             if wgmps.finished() and wgmps.successful():
                 data = wgmps.response()
+            if times == max_times:
+                LOG.info("WorkerServer tried to get match " + \
+                    str(max_times) + " times; shutting down.")
+                self.running = False
+            else:
+                times = times + 1
         return data
     
     def do_play(self, data):

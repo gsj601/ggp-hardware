@@ -9,16 +9,20 @@ import errno
 import server
 
 
+# Setting up logging:
+# https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+import logging
+LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.NullHandler())
 
 
 
 class WorkerAnnounceReadyServer(server.Server):
     
     def __init__(self, 
-            logger, 
             dispatcher_hp, 
             ourHostname, ourPlayerPort, ourWorkerPort):
-        self._logger = logger
+        server.Server.__init__(self)
         
         self._dispatcher_hp = dispatcher_hp
         
@@ -35,20 +39,20 @@ class WorkerAnnounceReadyServer(server.Server):
             play, by sending them a json object of our hostname and ports.
         """
         
-        self._logger.debug("WorkerServer announcing ready with %s", 
-                configuration)
+        LOG.debug("WorkerServer announcing ready with %s", 
+                self._configuration)
         
         try:
             to_send = json.dumps(self._configuration)
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(self._dispatcher_hp)
-            self._logger.debug("WorkerReadyAnnounceServer connected.")
+            LOG.debug("WorkerReadyAnnounceServer connected.")
             s.send(to_send)
-            self._logger.debug("WorkerReadyAnnounceServer sent.")
+            LOG.debug("WorkerReadyAnnounceServer sent.")
             s.close()
             self._set_successful()
         except socket.error as e:
-            self._logger.info(
+            LOG.info(
                 "Shutting down WorkerServer because no DispatchServer found.")
             self._set_unsuccessful()
         
@@ -59,8 +63,10 @@ class WorkerAnnounceReadyServer(server.Server):
 
 class WorkerGetMatchParamsServer(server.ReceivingServer):
     
-    def __init__(self, logger, timeout=20):
-        self._logger= logger
+    def __init__(self, ourHostname, ourWorkerPort, timeout=20):
+        server.ReceivingServer.__init__(self)
+        self._ourHostname = ourHostname
+        self._ourWorkerPort = ourWorkerPort
         self._timeout = timeout
         
     
@@ -73,7 +79,7 @@ class WorkerGetMatchParamsServer(server.ReceivingServer):
             The non-server listening code was taken from:
                 https://wiki.python.org/moin/TcpCommunication
         """
-        self._logger.info("WorkerServer waiting for match to play.")
+        LOG.info("WorkerServer waiting for match to play.")
         
         our_hp = (self._ourHostname, self._ourWorkerPort)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -82,10 +88,10 @@ class WorkerGetMatchParamsServer(server.ReceivingServer):
             s.bind(our_hp)
             s.listen(1)
             conn, addr = s.accept()
-            self._logger.debug("WorkerServer received match connection.")
+            LOG.debug("WorkerServer received match connection.")
             data = json.loads(conn.recv(100000).strip())
             conn.close()
-            self._logger.debug("WorkerServer read match details.")
+            LOG.debug("WorkerServer read match details.")
             connected = True
             self._set_response(data)
         except socket.timeout as e:
@@ -95,7 +101,7 @@ class WorkerGetMatchParamsServer(server.ReceivingServer):
             error_number = e.errno
             self._set_unsuccessful()
             if error_number == errno.EADDRINUSE:
-                raise WorkerGetMatchParamsServerAddressInUseError(address_tuple)
+                raise WorkerGetMatchParamsServerAddressInUseError(our_hp)
             elif error_number == errno.EAGAIN:
                 raise WorkerGetMatchParamsServerTryAgainError()
             else:
@@ -115,15 +121,19 @@ class WorkerGetMatchParamsServerAddressInUseError(
             WorkerGetMatchParamsServerAllowableError):
     
     def __init__(self, address_tuple):
-        self.msg = "Worker could not wait for match details at " + \
-            str(address_tuple)
+        WorkerGetMatchParamsServerAllowableError.__init__(self, 
+                "Worker could not wait for match details at " + \
+                str(address_tuple)
+                )
 
 
 class WorkerGetMatchParamsServerTryAgainError(
             WorkerGetMatchParamsServerAllowableError):
     
     def __init__(self):
-        self.msg = "Told to try again while waiting for match details."
+        WorkerGetMatchParamsServerAllowableError.__init__(self, 
+                "Told to try again while waiting for match details."
+                )
 
 
 

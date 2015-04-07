@@ -11,12 +11,19 @@ import SocketServer
 import server
 
 
+# Setting up logging:
+# https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+import logging
+LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.NullHandler())
+
+
 
 
 class DispatchAnnounceMatchServer(server.Server):
     
-    def __init__(self, logger, configuration, playerHostWorkerTuple):
-        self._logger = logger
+    def __init__(self, configuration, playerHostWorkerTuple):
+        server.Server.__init__(self)
         self._configuration = configuration
         self._playerHostWorkerTuple = playerHostWorkerTuple
     
@@ -30,7 +37,7 @@ class DispatchAnnounceMatchServer(server.Server):
             s.send(to_send)
             self._set_successful()
         except socket.error as e:
-            self._logger.debug("Socket error connecting to announce game to %s", 
+            LOG.debug("Socket error connecting to announce game to %s", 
                     workerTuple)
             self._set_unsuccessful()
         finally:
@@ -45,7 +52,8 @@ class DispatchAnnounceMatchServer(server.Server):
 class DispatchReadyWorkerServer(SocketServer.ThreadingTCPServer):
     
     def __init__(self, address_tuple, playerHost_queue):
-        SocketServer.ThreadingTCPServer(address_tuple, ReadyWorkerHandler)
+        SocketServer.ThreadingTCPServer.__init__(
+            self, address_tuple, ReadyWorkerHandler)
         
         self._queue = playerHost_queue
 
@@ -77,7 +85,9 @@ class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
         # Get out the fields we want:
         hostname, pPort = (data["hostname"], data["pPort"])
         wPort = data["wPort"]
-        LOG.info("Handled worker was %s, %s, %s", hostname, pPort, wPort)
+        LOG.info(
+            "Handled worker was %s, %s, %s", hostname, pPort, wPort
+            )
         # Add the ready worker to the queue.  
         self.server._queue.put_host(hostname, pPort, wPort)
         

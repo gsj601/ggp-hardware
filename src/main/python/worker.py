@@ -53,7 +53,6 @@ class WorkerServer(object):
         if self.running:
             # Tell the dispatcher we're ready to play a game.  
             wars = NET.WorkerAnnounceReadyServer(
-                LOG, 
                 self._dispatcher_hp,
                 self._ourHostname, self._ourPlayerPort, self._ourWorkerPort
                 )
@@ -64,7 +63,9 @@ class WorkerServer(object):
         data = None
         while self.running and data == None:
             # The wait half:
-            wgmps = NET.WorkerGetMatchParamsServer(LOG)
+            wgmps = NET.WorkerGetMatchParamsServer(
+                self._ourHostname, self._ourWorkerPort
+                )
             try:
                 wgmps.run()
             except NET.WorkerGetMatchParamsServerAllowableError as e:

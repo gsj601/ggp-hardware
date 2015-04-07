@@ -12,8 +12,9 @@ import threading
 random.seed()
 
 # Local imports
-import ggpServerProcess
+import processes.ggpServerProcess
 import util.config_help
+import networking.dispatching as NET
 
 # Setting up logging:
 # https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
@@ -117,40 +118,6 @@ class PlayerHostQueue(object):
     
 
 
-
-
-# Listen for incoming connections from ready Workers
-
-
-class ReadyWorkerHandler(SocketServer.StreamRequestHandler):
-    """
-    Based partially on this:
-        http://thomasfischer.biz/python-simple-json-tcp-server-and-client/
-    Partially on Python docs:
-        https://docs.python.org/2/library/socketserver.html
-    """
-    
-    def handle(self):
-        """ReadyWorkerHandler.handle
-            Reads from the rfile; load it from json; send an okay back; 
-            get out the hostname and port that was sent to us from the worker
-            that reported ready; and then add that player to our queue of 
-            available workers.  
-        """
-        LOG.debug("Handling ready worker connection.")
-        # Read in from the stream:
-        # Parse the data as json:
-        data = json.load(self.rfile)
-        # Return an okay on the socket.  
-        self.request.sendall(json.dumps({'return':'ok'}))
-        
-        # Get out the fields we want:
-        hostname, pPort = (data["hostname"], data["pPort"])
-        wPort = data["wPort"]
-        LOG.info("Handled worker was %s, %s, %s", hostname, pPort, wPort)
-        # Add the ready worker to the queue.  
-        PlayerHostQueue.put_host(hostname, pPort, wPort)
-        
 
 
 
@@ -282,24 +249,21 @@ class Match(object):
             LOG.debug("Match of %s is announcing to %s",
                     self.gameKey, configuration)
             playerHost = self._playerHosts[i]
-
-            to_send = json.dumps(configuration)
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            connected = False
-            while not connected:
-                workerTuple = playerHost.get_worker_tuple() 
-                try:
-                    s.connect(workerTuple)
-                    connected = True
-                except socket.error as e:
+            
+            workerTuple = playerHost.get_worker_tuple()
+            successful = False
+            while not successful:
+                dams = NET.DispatchAnnounceMatchServer(
+                        configuration, workerTuple)
+                dams.run()
+                if not (dams.finished() and dams.successful()):
                     LOG.debug("Couldn't connect to announce game to %s", 
                             workerTuple)
                     time.sleep(1)
-                LOG.debug("Connected to %s to announce game.", 
-                        workerTuple)
-            s.send(to_send)
-            s.close()
-            LOG.debug("Announced to %s successfully.", workerTuple)
+                else:
+                    LOG.debug("Announced game to %s.", 
+                            workerTuple)
+                    successful = True
     
     def playMatch(self):
         """Match.playMatch: public method that handles running an individual
@@ -308,7 +272,7 @@ class Match(object):
         """
         LOG.debug("Match of %s is starting", self.gameKey)
         self._announceGame()
-        self._ggpPlayer = ggpServerProcess.GGPServerProcess(
+        self._ggpPlayer = processes.ggpServerProcess.GGPServerProcess(
             self.config,
             self.tourneyName, 
             self.gameKey,
@@ -353,8 +317,8 @@ class DispatchServer(object):
         self._ourDispatchPort = DispatchServer.config.ourDispatchPort
         
         h_p = (self._ourHostname, self._ourDispatchPort)
-        self._readyWorkerServer = SocketServer.ThreadingTCPServer(
-            h_p, ReadyWorkerHandler)
+        self._readyWorkerServer = NET.DispatchReadyWorkerServer(
+            h_p, PlayerHostQueue)
         
         self._tourneyName = DispatchServer.config.tourneyName
         LOG.debug("Dispatch Server constructed.")

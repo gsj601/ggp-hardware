@@ -1,6 +1,6 @@
 
 # Local imports
-import worker.workerServer
+import worker
 import util.logging_help
 import util.config_help
 
@@ -12,7 +12,7 @@ import sys
 # Set up logging
 import logging
 import logging.config
-logging.config.fileConfig("logging.w.conf",disable_existing_loggers=False)
+logging.config.fileConfig("config/logging.w.conf",disable_existing_loggers=False)
 
 
 
@@ -28,7 +28,7 @@ parser.add_option("-v", "--verbose",
         help="Turn logging level to VERBOSE.",
         action="store_true"
         )
-default_config_file = "system.conf"
+default_config_file = "config/system.conf"
 parser.add_option("-j", "--json-config-file",
         dest="json_config_file",
         help="What JSON-formatted config file to read.",
@@ -76,7 +76,7 @@ except IOError as e:
         logging.getLogger("worker").debug(
             "Couldn't find default config file, ignoring."
             )
-workerServerConfig = worker.workerServer.WorkerServerConfig.configFrom_dict(
+workerServerConfig = worker.WorkerServerConfig.configFrom_dict(
     config
     )
 
@@ -90,6 +90,6 @@ util.logging_help.set_fileHandler_file(
 
 
 # Start the server. 
-ws = worker.workerServer.WorkerServer(config)
+ws = worker.WorkerServer(config)
 ws.run()
 

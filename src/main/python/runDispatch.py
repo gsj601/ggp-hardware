@@ -1,16 +1,17 @@
 
 # Local imports
 import util.logging_help
-import dispatcher.dispatchServer
+import dispatcher
 
 # Library imports
 import optparse
 import json
+import sys
 
 # Setup logging
 import logging
 import logging.config
-logging.config.fileConfig("logging.d.conf",disable_existing_loggers=False)
+
 
 
 
@@ -32,13 +33,31 @@ parser.add_option("-v", "--verbose",
         help="Turn logging level to VERBOSE.",
         action="store_true"
         )
-default_config_file = "system.conf"
+default_config_file = "config/system.conf"
 parser.add_option("-j", "--json-config-file",
         dest="json_config_file",
         help="What JSON-formatted config file to read.",
         default=default_config_file
         )
+default_log_config_file = "config/logging.d.conf"
+parser.add_option("-l", "--log-config-file",
+        dest="log_config_file",
+        help="What Python logging config file should be used.",
+        default=default_log_config_file
+        )
 (options, args) = parser.parse_args()
+
+# Initialize the logger. 
+
+try:
+    logging.config.fileConfig(
+           options.log_config_file,disable_existing_loggers=False)
+except IOError as e:
+    print >> sys.stderr, "Could not open the logging file specified in " + \
+        options.log_config_file
+    print >> sys.stderr, "Error message was:\n " + str(e)
+    sys.exit(1)
+
 
 
 # Set the logging level based on options. 
@@ -76,7 +95,7 @@ except IOError as e:
 
 
 # Start the server. 
-ds = dispatcher.dispatchServer.DispatchServer(config, options.random)
+ds = dispatcher.DispatchServer(config, options.random)
 ds.run()
 
 

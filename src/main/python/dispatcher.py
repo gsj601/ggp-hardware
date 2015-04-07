@@ -250,10 +250,11 @@ class Match(object):
                     self.gameKey, configuration)
             playerHost = self._playerHosts[i]
             
+            workerTuple = playerHost.get_worker_tuple()
             successful = False
             while not successful:
                 dams = NET.DispatchAnnounceMatchServer(
-                        LOG, configuration, playerHost.get_worker_tuple())
+                        configuration, workerTuple)
                 dams.run()
                 if not (dams.finished() and dams.successful()):
                     LOG.debug("Couldn't connect to announce game to %s", 

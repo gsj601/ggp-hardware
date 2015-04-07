@@ -36,7 +36,9 @@ class Server(object):
 class ServerNotFinishedError(Exception):
     
     def __init__(self):
-        self.msg = "Tried to check server results before it was finished."
+        Exception.__init__(self, 
+            "Tried to check server results before it was finished."
+            )
     
     
 
@@ -44,7 +46,9 @@ class ServerNotFinishedError(Exception):
 class ServerNotSuccessfulYetError(ServerNotFinishedError):
     
     def __init__(self):
-        self.msg = "Tried to check server success before it was finished."
+        ServerNotFinishedError.__init__(self, 
+            "Tried to check server success before it was finished."
+            )
     
     
 
@@ -52,7 +56,9 @@ class ServerNotSuccessfulYetError(ServerNotFinishedError):
 class ServerHasNotReceivedYetError(ServerNotFinishedError):
     
     def __init__(self):
-        self.msg = "Tried to check server response before it was finished."
+        ServerNotFinishedError.__init__(self, 
+            "Tried to check server response before it was finished."
+            )
     
     
 
@@ -60,13 +66,15 @@ class ServerHasNotReceivedYetError(ServerNotFinishedError):
 class ServerWasUnsuccessfulError(Exception):
     
     def __init__(self):
-        self.mst = "Tried to check server response when it was unsuccessful."
+        Exception.__init__(self, 
+            "Tried to check server response when it was unsuccessful."
+            )
 
 
 class ReceivingServer(Server):
     
     def __init__(self):
-        super(ReceivingServer, self).__init__(self)
+        Server.__init__(self)
         self._response = None
     
     def _set_response(self, response):

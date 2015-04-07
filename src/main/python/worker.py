@@ -145,16 +145,15 @@ class WorkerServer(object):
         return data
     
     def do_play(self, data):
-        if self.running:
-            # The play half:
-            LOG.debug("WorkerServer is setting up player.")
-            port, playerType = (self._ourPlayerPort, data["playerType"])
-            player = processes.ggpPlayerProcess.GGPPlayerProcess(
-                self.config, port, playerType)
-            LOG.info("WorkerServer starting player %s, %i", 
-                    playerType, port)
-            player.run()
-            LOG.info("Player has run.")
+        # The play half:
+        LOG.debug("WorkerServer is setting up player.")
+        port, playerType = (self._ourPlayerPort, data["playerType"])
+        player = processes.ggpPlayerProcess.GGPPlayerProcess(
+            self.config, port, playerType)
+        LOG.info("WorkerServer starting player %s, %i", 
+                playerType, port)
+        player.run()
+        LOG.info("Player has run.")
     
     def run(self):
         """WorkerServer.run(): just loops: announcing ready, wait to play.

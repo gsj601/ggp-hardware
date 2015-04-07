@@ -52,8 +52,8 @@ class WorkerAnnounceReadyServer(server.Server):
             s.close()
             self._set_successful()
         except socket.error as e:
-            LOG.info(
-                "Shutting down WorkerServer because no DispatchServer found.")
+            LOG.debug(
+                "WorkerServer did not find DispatchServer.")
             self._set_unsuccessful()
         
         

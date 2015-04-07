@@ -27,9 +27,9 @@ class WorkerAnnounceReadyServer(server.Server):
         self._dispatcher_hp = dispatcher_hp
         
         self._configuration = {
-            "hostname": self._ourHostname,
-            "pPort": self._ourPlayerPort,
-            "wPort": self._ourWorkerPort
+            "hostname": ourHostname,
+            "pPort": ourPlayerPort,
+            "wPort": ourWorkerPort
             }
         
     

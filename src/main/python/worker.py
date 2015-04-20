@@ -179,7 +179,7 @@ class WorkerServerState(object):
         self._state = WorkerServerState.state_play
     
     def _set_finished(self):
-        self._state = WorkerServerSTate.state_finished
+        self._state = WorkerServerState.state_finished
     
     def is_announcing(self):
         return self._state == 1

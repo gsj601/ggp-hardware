@@ -55,6 +55,11 @@ class DispatchReadyWorkerServer(SocketServer.ThreadingTCPServer):
         SocketServer.ThreadingTCPServer.__init__(
             self, address_tuple, ReadyWorkerHandler)
         
+        LOG.debug("DispatchReadyWorkerServer constructed, %s", address_tuple)
+        
+        if address_tuple[0] != "0.0.0.0":
+            LOG.warn("DispatchReadyWorkerServer not listening externally.")
+        
         self._queue = playerHost_queue
 
 

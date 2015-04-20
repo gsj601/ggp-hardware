@@ -41,11 +41,14 @@ class WorkerAnnounceReadyServer(server.Server):
         
         LOG.debug("WorkerServer announcing ready with %s", 
                 self._configuration)
+        LOG.debug("WorkerServer announcing to %s", self._dispatcher_hp)
         
         try:
             to_send = json.dumps(self._configuration)
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(self._dispatcher_hp)
+            addr = str(self._dispatcher_hp[0])
+            port = self._dispatcher_hp[1]
+            s.connect((addr,port))
             LOG.debug("WorkerReadyAnnounceServer connected.")
             s.send(to_send)
             LOG.debug("WorkerReadyAnnounceServer sent.")
@@ -53,7 +56,8 @@ class WorkerAnnounceReadyServer(server.Server):
             self._set_successful()
         except socket.error as e:
             LOG.debug(
-                "WorkerServer did not find DispatchServer.")
+                "WorkerServer could not connect to DispatchServer, " + \
+                "error was: " + str(e))
             self._set_unsuccessful()
         
         
@@ -81,7 +85,12 @@ class WorkerGetMatchParamsServer(server.ReceivingServer):
         """
         LOG.info("WorkerServer waiting for match to play.")
         
-        our_hp = (self._ourHostname, self._ourWorkerPort)
+        if self._ourHostname != "0.0.0.0":
+            LOG.debug("WorkerGetMatchParamsServer will use 0.0.0.0 to " + \
+            "listen externally instead of hostname " + str(self._ourHostname))
+        
+        #our_hp = (self._ourHostname, self._ourWorkerPort)
+        our_hp = ("0.0.0.0", self._ourWorkerPort)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.settimeout(self._timeout)

@@ -283,12 +283,18 @@ class Match(object):
             (hostname, port) = playerHost.get_player_tuple()
             self._ggpPlayer.add_host(hostname, hostname, port)
         
-        LOG.info("Match of %s will be run in 10s...", self.gameKey)
-        time.sleep(10)
+        t = threading.Thread(target=self._threadable_run)
+        t.start()
+        
+    
+    def _threadable_run(self):
+        t = 25
+        LOG.info("Match of %s will be run in " + str(t) + "s...", self.gameKey)
+        time.sleep(t)
         self._ggpPlayer.run()
         LOG.info("Match finished")
         LOG.debug("Match finished was %s", self.to_dict())
-            
+        
 
 
 

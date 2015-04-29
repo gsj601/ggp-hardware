@@ -293,7 +293,7 @@ class Match(object):
         
     
     def _threadable_run(self):
-        t = 25
+        t = 10
         LOG.info("Match of %s will be run in " + str(t) + "s...", self.gameKey)
         time.sleep(t)
         self._ggpPlayer.run()

@@ -32,6 +32,7 @@ class DispatchAnnounceMatchServer(server.Server):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         workerTuple = self._playerHostWorkerTuple
         try:
+            LOG.debug("Connecting to %s to announce match.", workerTuple)
             s.connect(workerTuple)
             connected = True
             s.send(to_send)

@@ -33,6 +33,7 @@ class DispatchAnnounceMatchServer(server.Server):
         workerTuple = self._playerHostWorkerTuple
         try:
             LOG.debug("Connecting to %s to announce match.", workerTuple)
+            s.settimeout(3)
             s.connect(workerTuple)
             connected = True
             s.send(to_send)

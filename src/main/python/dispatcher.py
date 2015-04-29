@@ -259,6 +259,9 @@ class Match(object):
                 if not (dams.finished() and dams.successful()):
                     LOG.debug("Couldn't connect to announce game to %s", 
                             workerTuple)
+                    playerHost = PlayerHostQueue.get_host()
+                    self._playerHosts[i] = playerHost
+                    workerTuple = playerHost.get_worker_tuple()
                     time.sleep(1)
                 else:
                     LOG.debug("Announced game to %s.", 

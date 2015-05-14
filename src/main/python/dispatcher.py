@@ -284,9 +284,11 @@ class Match(object):
             self.startClock,
             self.playClock
             )
-        for playerHost in self._playerHosts:
+        for i in range(len(self._playerHosts)):
+            playerHost = self._playerHosts[i]
             (hostname, port) = playerHost.get_player_tuple()
-            self._ggpPlayer.add_host(hostname, hostname, port)
+            playerType = self.playerTypes[i]
+            self._ggpPlayer.add_host(hostname, playerType, port)
         
         t = threading.Thread(target=self._threadable_run)
         t.start()

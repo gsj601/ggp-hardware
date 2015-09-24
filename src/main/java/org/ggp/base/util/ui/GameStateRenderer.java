@@ -102,9 +102,6 @@ public class GameStateRenderer {
     }
 
     private static String getXHTMLfromGameXML(String gameXML, String XSL) {
-        XSL = XSL.replace("<!DOCTYPE stylesheet [<!ENTITY ROOT \"http://games.ggp.org/base\">]>", "");
-        XSL = XSL.replace("&ROOT;", "http://games.ggp.org/base").trim();
-
         IOString game = new IOString(gameXML);
         IOString xslIOString = new IOString(XSL);
         IOString content = new IOString("");
